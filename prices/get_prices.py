@@ -37,11 +37,13 @@ def get_prices(contract_addresses: list):
         df['VolumeETH'] = df['total_volumes'].apply(lambda x: x[1])
         df['VolumeETH'] = df['VolumeETH'].astype('float')
 
-        json_data['oneHour'] = (df.iloc[-1]['Price'] / df.iloc[-2]['Price']) - 1
-        json_data['oneDay'] = (df.iloc[-1]['Price'] / df.iloc[-24]['Price']) - 1
-        json_data['sevenDays'] = (df.iloc[-1]['Price'] / df.iloc[-(24 * 7)]['Price']) - 1
-        json_data['oneDayVolume'] = {'eth': df.iloc[-1]['VolumeETH'],
-                                     'usd': df.iloc[-1]['VolumeETH'] * ether_price}
+        json_data['oneHour'] = round((df.iloc[-1]['Price'] / df.iloc[-2]['Price']) - 1, 6)
+        json_data['oneDay'] = round((df.iloc[-1]['Price'] / df.iloc[-24]['Price']) - 1, 6)
+        json_data['sevenDays'] = round((df.iloc[-1]['Price'] / df.iloc[-(24 * 7)]['Price']) - 1, 6)
+        json_data['oneDayVolume'] = {
+            'eth': df.iloc[-1]['VolumeETH'],
+            'usd': df.iloc[-1]['VolumeETH'] * ether_price
+        }
 
         # dir_name = './{}'.format(contract_address)
         # if not os.path.exists(dir_name):
