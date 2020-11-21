@@ -16,9 +16,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from prices.views import PricesApiView
+from prices.views import PricesApiView, CandlesticksApiView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('prices/', PricesApiView.as_view())
+    path('prices/', PricesApiView.as_view()),
+    path('candlesticks/', CandlesticksApiView.as_view())
 ]
