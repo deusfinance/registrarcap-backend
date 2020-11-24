@@ -2,7 +2,7 @@ import json
 import math
 from pprint import pprint
 
-from get_transactions import update_transactions
+from prices.get_transactions import update_transactions
 
 
 def get_candlesticks(contract_address, interval: int = 60):
