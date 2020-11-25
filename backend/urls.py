@@ -21,5 +21,5 @@ from prices.views import PricesApiView, CandlesticksApiView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('prices/', PricesApiView.as_view()),
-    path('candlesticks/', CandlesticksApiView.as_view())
+    path('candles', CandlesticksApiView.as_view())
 ]
