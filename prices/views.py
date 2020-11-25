@@ -21,5 +21,10 @@ class PricesApiView(APIView):
 class CandlesticksApiView(APIView):
 
     def get(self, request):
-        candlesticks = get_candlesticks('0x3b62f3820e0b035cc4ad602dece6d796bc325325', request.GET.get('interval', 60))
+        candlesticks = get_candlesticks(
+            '0x3b62f3820e0b035cc4ad602dece6d796bc325325',
+            request.GET.get('resolution', 60),
+            request.GET.get('from'),
+            request.GET.get('to'),
+        )
         return Response(candlesticks)

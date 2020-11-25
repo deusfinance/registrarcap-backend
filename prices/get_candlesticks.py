@@ -1,16 +1,29 @@
 import json
 import math
-from pprint import pprint
 
 from prices.get_transactions import update_transactions
 
 
-def get_candlesticks(contract_address, interval: int = 60):
+def get_candlesticks(contract_address, interval: int = 1, from_timestamp=None, to_timestamp=None):
     """
+    :param to_timestamp:
+    :param from_timestamp:
     :param contract_address: Ex 0x3b...
-    :param interval: candles interval in seconds (it's 60 seconds = 1 minute by default)
+    :param interval: candles interval in minutes (it's 1 minute by default)
     :return: []
     """
+
+    interval = int(interval) * 60
+
+    if from_timestamp:
+        from_timestamp = int(from_timestamp)
+    else:
+        from_timestamp = 0
+
+    if to_timestamp:
+        to_timestamp = int(to_timestamp)
+    else:
+        to_timestamp = math.inf
 
     update_transactions()
 
@@ -22,6 +35,8 @@ def get_candlesticks(contract_address, interval: int = 60):
                 'value': int(transaction['value']),
             })
         transactions.sort(key=lambda o: o['timestamp'])
+
+    transactions = list(filter(lambda tx: from_timestamp <= tx['timestamp'] <= to_timestamp, transactions))
 
     candlesticks = []
 
@@ -62,6 +77,3 @@ def get_candlesticks(contract_address, interval: int = 60):
         low_price = min(low_price, value)
 
     return candlesticks
-
-
-pprint(get_candlesticks('0x3b62f3820e0b035cc4ad602dece6d796bc325325', 60 * 60 * 24))
