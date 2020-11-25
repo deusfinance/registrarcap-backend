@@ -15,14 +15,14 @@ def get_candlesticks(contract_address, interval: int = 1, from_timestamp=None, t
 
     interval = int(interval) * 60
 
-    if from_timestamp:
+    try:
         from_timestamp = int(from_timestamp)
-    else:
+    except:
         from_timestamp = 0
 
-    if to_timestamp:
+    try:
         to_timestamp = int(to_timestamp)
-    else:
+    except:
         to_timestamp = math.inf
 
     update_transactions()
@@ -57,13 +57,19 @@ def get_candlesticks(contract_address, interval: int = 1, from_timestamp=None, t
 
         if candlestick_timestamp + interval < timestamp:
             candlesticks.append({
-                'timestamp': candlestick_timestamp,
-                'open_time': open_time,
-                'open_price': open_price,
-                'high_price': high_price,
-                'low_price': low_price,
-                'close_price': transactions[i - 1]['value'],
-                'volume': volume
+                't': open_time,
+                'o': open_price,
+                'h': high_price,
+                'l': low_price,
+                'c': transactions[i - 1]['value'],
+                'v': volume
+                # 'timestamp': candlestick_timestamp,
+                # 'open_time': open_time,
+                # 'open_price': open_price,
+                # 'high_price': high_price,
+                # 'low_price': low_price,
+                # 'close_price': transactions[i - 1]['value'],
+                # 'volume': volume
             })
 
             # Next candle
