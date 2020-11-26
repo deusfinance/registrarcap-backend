@@ -36,7 +36,10 @@ def get_candlesticks(contract_address, interval: int = 1, from_timestamp=None, t
             })
         transactions.sort(key=lambda o: o['timestamp'])
 
-    transactions = list(filter(lambda tx: from_timestamp <= tx['timestamp'] <= to_timestamp, transactions))
+    transactions = list(filter(lambda tx: from_timestamp < tx['timestamp'] < to_timestamp, transactions))
+
+    if len(transactions) == 0:
+        return []
 
     candlesticks = []
 
@@ -57,7 +60,7 @@ def get_candlesticks(contract_address, interval: int = 1, from_timestamp=None, t
 
         if candlestick_timestamp + interval < timestamp:
             candlesticks.append({
-                't': open_time,
+                't': candlestick_timestamp,
                 'o': open_price,
                 'h': high_price,
                 'l': low_price,
