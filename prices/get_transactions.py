@@ -2,7 +2,7 @@
 # coding: utf-8
 
 # In[2]:
-
+from time import sleep
 
 import pandas as pd
 import requests
@@ -45,7 +45,7 @@ def updateTransactions(contract_address):
                 latest_local_block = 0
                 latest_local_timestamp = 0
         else:
-            with open('/' + contract_address + '/transactions.json', 'w'):
+            with open('./' + contract_address + '/transactions.json', 'w'):
                 pass
             list_transactions = []
             latest_local_block = 0
@@ -87,7 +87,7 @@ def updateTransactions(contract_address):
 def exportToJSON(dataframe):
     if bool_log: print("Exporting to Json..")
     json_data = {}
-    if (contract_address == "0xD77700fC3C78d1Cb3aCb1a9eAC891ff59bC7946D"):
+    if (contract_address == "0xD77700fC3C78d1Cb3aCb1a9eAC891ff59bC7946D".lower()):
         response_ethplorer = requests.get(
             "https://api.ethplorer.io/getTokenInfo/0x3b62f3820e0b035cc4ad602dece6d796bc325325?apiKey=" + apikey_ethplorer).json()
 
@@ -155,10 +155,14 @@ def updateTransactionInfos(contract_address):
     length_transactions = len(list(filter(lambda tx: int(tx['timeStamp']) > latest_local_timestamp, list_transactions)))
 
     if length_transactions > 0:
+        abc = 0
         for transaction in list(filter(lambda tx: int(tx['timeStamp']) > latest_local_timestamp, list_transactions)):
             request = "https://api.ethplorer.io/getTxInfo/" + str(transaction['hash']) + "?apiKey=" + str(
                 apikey_ethplorer)
+            print(abc)
+            abc += 1
             list_api_transactionInfos.append(requests.get(request).json())
+            sleep(0.2)
 
         list_transactions_infos.extend(list_api_transactionInfos)
 
@@ -181,7 +185,7 @@ def updateInternalTransactions(list_transactions):
     with open('./' + contract_address + '/transactions.json') as json_file:
         list_transactions = json.load(json_file)
 
-    if (os.path.isdir('./' + contract_address + '/')):
+    if os.path.isdir('./' + contract_address + '/'):
         if os.path.isfile('./' + contract_address + '/transaction-internal-infos.json'):
             try:
                 with open('./' + contract_address + '/transaction-internal-infos.json') as json_file:
@@ -209,14 +213,17 @@ def updateInternalTransactions(list_transactions):
     length_transactions = len(
         list(filter(lambda tx: int(tx['timeStamp']) > int(latest_local_timestamp), list_transactions)))
 
-    if (length_transactions > 0):
+    if length_transactions > 0:
+        abc = 0
         for transaction in list(
                 filter(lambda tx: int(tx['timeStamp']) > int(latest_local_timestamp), list_transactions)):
+            print(abc)
+            abc += 1
             request = "http://api.etherscan.io/api?module=account&action=txlistinternal&txhash=" + str(
                 transaction['hash']) + "&apikey=" + apikey_etherscan
             response = requests.get(request).json()
 
-            if (int(response['status']) == 1):
+            if int(response['status']) == 1:
                 response['result'][0]['hash'] = transaction['hash']
 
             list_api_transaction_internal_infos.append(response)
@@ -237,7 +244,7 @@ def updateInternalTransactions(list_transactions):
 # In[8]:
 
 
-def createDataframe(list_transactions, list_transactions_infos, *args, **kwargs):
+def createDataframe(list_transactions, list_transactions_infos, list_internal_transactions, *args, **kwargs):
     if bool_log: print("Creating dataframe..")
     bool_internal = kwargs.get('internal', False)
     df_transactions = pd.DataFrame.from_dict(list_transactions[1:])
@@ -329,13 +336,18 @@ def exportToArray(dataframe):
 
     dataframe = dataframe.groupby(['timestamp', 'value', 'value(token)', 'transactionType', 'hour'])[
         'price'].mean().reset_index()
+
+    return dataframe[['hour',  # 'value', 'value(token)', 'transactionType',
+                      'price']].to_numpy()
+
     print(dataframe[['hour',  # 'value', 'value(token)', 'transactionType',
                      'price']].to_numpy())
 
 
+
 # In[2]:
 
-contract_address = '0x3b62f3820e0b035cc4ad602dece6d796bc325325'
+contract_address = '0xd77700fc3c78d1cb3acb1a9eac891ff59bc7946d'
 bool_internal = True
 bool_log = True
 
@@ -344,14 +356,17 @@ def update_transactions():
     if bool_log: print("Updating Contract: " + contract_address)
 
     list_transactions = updateTransactions(contract_address)
-    # list_transactions_infos = updateTransactionInfos(contract_address)
+    list_transactions_infos = updateTransactionInfos(contract_address)
 
-    # if (bool_internal):
-        # list_internal_transactions = updateInternalTransactions(contract_address)
+    if bool_internal:
+        list_internal_transactions = updateInternalTransactions(contract_address)
 
-    # dataframe = createDataframe(list_transactions, list_transactions_infos, internal=bool_internal)
+    dataframe = createDataframe(list_transactions, list_transactions_infos, list_internal_transactions,
+                                internal=bool_internal)
     # exportToJSON(dataframe)
+    return exportToArray(dataframe)
 
 
 if __name__ == '__main__':
-    update_transactions()
+    prices = update_transactions()
+    print(prices)
