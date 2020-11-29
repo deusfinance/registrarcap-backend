@@ -28,7 +28,6 @@ def get_candlesticks(contract_address, interval: int = 1, from_timestamp=None, t
     raw_transactions = update_transactions()
     transactions = []
     for tx in raw_transactions:
-        print(tx)
         transactions.append({
             "timestamp": int(tx[0].timestamp()),
             "price": tx[1]
@@ -59,12 +58,13 @@ def get_candlesticks(contract_address, interval: int = 1, from_timestamp=None, t
         volume += price
 
         if candlestick_timestamp + interval < timestamp:
+            close_price = transactions[i - 1]['price']
             candlesticks.append({
                 't': candlestick_timestamp,
                 'o': open_price,
                 'h': high_price,
                 'l': low_price,
-                'c': transactions[i - 1]['price'],
+                'c': close_price,
                 'v': volume
                 # 'timestamp': candlestick_timestamp,
                 # 'open_time': open_time,
@@ -78,7 +78,7 @@ def get_candlesticks(contract_address, interval: int = 1, from_timestamp=None, t
             # Next candle
             candlestick_timestamp += interval
             open_time = timestamp
-            open_price = price
+            open_price = close_price
             high_price = -math.inf
             low_price = math.inf
 
