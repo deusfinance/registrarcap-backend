@@ -66,7 +66,7 @@ def updateTransactions(contract_address):
 
         list_api_transactions = requests.get(request).json()['result']
         list_api_transactions = list(
-            filter(lambda tx: int(tx['timeStamp']) > int(latest_local_timestamp), list_api_transactions))
+            filter(lambda tx: int(tx['timeStamp']) > latest_local_timestamp, list_api_transactions))
 
         list_transactions.extend(list_api_transactions)
 
@@ -132,7 +132,11 @@ def updateTransactionInfos(contract_address):
             try:
                 with open('./' + contract_address + '/transaction-infos.json') as json_file:
                     list_transactions_infos = json.load(json_file)
-                    latest_local_timestamp = list_transactions_infos[-1]['timestamp']
+                    latest_local_timestamp = None
+                    i = -1
+                    while not latest_local_timestamp:
+                        latest_local_timestamp = list_transactions_infos[i]['timestamp']
+                        i -= 1
             except:
                 list_transactions_infos = []
                 if os.path.isfile('./' + contract_address + '/transactions.json'):
@@ -152,11 +156,13 @@ def updateTransactionInfos(contract_address):
         latest_local_timestamp = 0
 
     list_api_transactionInfos = []
-    length_transactions = len(list(filter(lambda tx: int(tx['timeStamp']) > latest_local_timestamp, list_transactions)))
+    length_transactions = len(
+        list(filter(lambda tx: int(tx['timeStamp']) > int(latest_local_timestamp), list_transactions)))
 
     if length_transactions > 0:
         abc = 0
-        for transaction in list(filter(lambda tx: int(tx['timeStamp']) > latest_local_timestamp, list_transactions)):
+        for transaction in list(
+                filter(lambda tx: int(tx['timeStamp']) > int(latest_local_timestamp), list_transactions)):
             request = "https://api.ethplorer.io/getTxInfo/" + str(transaction['hash']) + "?apiKey=" + str(
                 apikey_ethplorer)
             print(abc)
@@ -256,7 +262,7 @@ def createDataframe(list_transactions, list_transactions_infos, list_internal_tr
     mask = pd.isna(df_infos['operations'])
     df_infos.loc[mask == False, 'value(token)'] = df_infos.loc[mask == False, 'operations'].apply(
         lambda x: float(x[0]['value']) / 1000000000000000000)
-    df_infos['date'] = df_infos['timestamp'].apply(lambda x: datetime.fromtimestamp(x))
+    df_infos['date'] = df_infos['timestamp'].apply(lambda x: datetime.fromtimestamp(int(x)))
 
     df_transactions = df_transactions[list(set(df_transactions.columns) - set(df_infos.columns)) + ['hash']].merge(
         df_infos, how='outer', on='hash').reset_index(drop=True)
@@ -342,7 +348,6 @@ def exportToArray(dataframe):
 
     print(dataframe[['hour',  # 'value', 'value(token)', 'transactionType',
                      'price']].to_numpy())
-
 
 
 # In[2]:
