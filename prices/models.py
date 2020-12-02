@@ -69,15 +69,22 @@ class Transaction:
     input = models.CharField(max_length=255)
 
 
+class Trade(models.Model):
+    timestamp = models.IntegerField()
+    price = models.DecimalField(max_digits=38, decimal_places=18)
+
+    class Meta:
+        ordering = ('timestamp', )
+
+
 class Candlestick(models.Model):
-    currency = models.ForeignKey(Currency, on_delete=models.CASCADE, related_name='candlesticks')
+    # currency = models.ForeignKey(Currency, on_delete=models.CASCADE, related_name='candlesticks')
 
-    timestamp = models.DateTimeField()
-    interval = models.IntegerField()  # in minutes
+    timestamp = models.IntegerField()
 
-    open_time = models.DateTimeField()
     open_price = models.DecimalField(max_digits=38, decimal_places=18)
     high_price = models.DecimalField(max_digits=38, decimal_places=18)
     low_price = models.DecimalField(max_digits=38, decimal_places=18)
     close_price = models.DecimalField(max_digits=38, decimal_places=18)
+
     volume = models.DecimalField(max_digits=38, decimal_places=18)

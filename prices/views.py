@@ -2,7 +2,7 @@ from django.db.models.deletion import get_candidate_relations_to_delete
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from prices.get_candlesticks import get_candlesticks
+from prices.get_candlesticks import get_candlesticks_from_db, get_candlesticks
 from prices.get_prices import get_prices
 
 

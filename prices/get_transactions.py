@@ -27,7 +27,7 @@ apikey_etherscan = 'Z38JUQ2M61Z7TWK5EDB1NK783RRXPYBWRJ'
 # In[5]:
 
 
-def updateTransactions(contract_address):
+def updateTransactions(contract_address, return_new_ones=False):
     if bool_log: print("------------------------------------------")
     if bool_log: print("Updating transactions..")
     latest_block = int(requests.get(
@@ -78,6 +78,8 @@ def updateTransactions(contract_address):
         with open('./' + contract_address + '/transactions.json', 'w') as file:
             file.write(json.dumps(list_transactions))
 
+        if return_new_ones:
+            return list_api_transactions
         return list_transactions
 
 
@@ -122,7 +124,7 @@ def exportToJSON(dataframe):
 # In[6]:
 
 
-def updateTransactionInfos(contract_address):
+def updateTransactionInfos(contract_address, return_new_ones=False):
     if bool_log: print("Updating transaction infos..")
     with open('./' + contract_address + '/transactions.json') as json_file:
         list_transactions = json.load(json_file)
@@ -180,13 +182,15 @@ def updateTransactionInfos(contract_address):
     else:
         if bool_log: print("Already up to date.\n------------------------------------------")
 
+    if return_new_ones:
+        return list_api_transactionInfos
     return list_transactions_infos
 
 
 # In[7]:
 
 
-def updateInternalTransactions(list_transactions):
+def updateInternalTransactions(list_transactions, return_new_ones=False):
     if bool_log: print("Updating internal transactions..")
     with open('./' + contract_address + '/transactions.json') as json_file:
         list_transactions = json.load(json_file)
@@ -244,6 +248,8 @@ def updateInternalTransactions(list_transactions):
     else:
         if bool_log: print("Already up to date.\n------------------------------------------")
 
+    if return_new_ones:
+        return list_api_transaction_internal_infos
     return list_transaction_internal_infos
 
 
@@ -252,7 +258,6 @@ def updateInternalTransactions(list_transactions):
 
 def createDataframe(list_transactions, list_transactions_infos, list_internal_transactions, *args, **kwargs):
     if bool_log: print("Creating dataframe..")
-    bool_internal = kwargs.get('internal', False)
     df_transactions = pd.DataFrame.from_dict(list_transactions[1:])
 
     df_infos = pd.DataFrame.from_dict(list_transactions_infos[1:])
@@ -281,19 +286,18 @@ def createDataframe(list_transactions, list_transactions_infos, list_internal_tr
     df_transactions['hour'] = df_transactions['date'].apply(lambda x: x.replace(minute=0, second=0))
     df_transactions['day'] = df_transactions['date'].apply(lambda x: datetime.date(x))
 
-    if (bool_internal == True):
-        df_internal = pd.DataFrame.from_dict(list_internal_transactions)
-        df_internal['status'] = df_internal['status'].astype('int')
-        df_internal = df_internal[df_internal.status == 1].reset_index(drop=True)
-        df_internal = df_internal.dropna().reset_index(drop=True)
-        df_internal.loc[:, 'hash'] = df_internal.loc[:, 'result'].apply(lambda x: x[0]['hash'])
-        df_internal.loc[:, 'value'] = df_internal.loc[:, 'result'].apply(
-            lambda x: float(x[0]['value']) / 1000000000000000000)
-        df_transactions.loc[df_transactions['to'] == '0x0000000000000000000000000000000000000000', 'value'] = \
-            df_transactions.loc[df_transactions['to'] == '0x0000000000000000000000000000000000000000']['hash'].map(
-                df_internal[df_internal['hash'].isin(
-                    df_transactions.loc[df_transactions['to'] == '0x0000000000000000000000000000000000000000'][
-                        'hash'])].set_index('hash')['value'])
+    df_internal = pd.DataFrame.from_dict(list_internal_transactions)
+    df_internal['status'] = df_internal['status'].astype('int')
+    df_internal = df_internal[df_internal.status == 1].reset_index(drop=True)
+    df_internal = df_internal.dropna().reset_index(drop=True)
+    df_internal.loc[:, 'hash'] = df_internal.loc[:, 'result'].apply(lambda x: x[0]['hash'])
+    df_internal.loc[:, 'value'] = df_internal.loc[:, 'result'].apply(
+        lambda x: float(x[0]['value']) / 1000000000000000000)
+    df_transactions.loc[df_transactions['to'] == '0x0000000000000000000000000000000000000000', 'value'] = \
+        df_transactions.loc[df_transactions['to'] == '0x0000000000000000000000000000000000000000']['hash'].map(
+            df_internal[df_internal['hash'].isin(
+                df_transactions.loc[df_transactions['to'] == '0x0000000000000000000000000000000000000000'][
+                    'hash'])].set_index('hash')['value'])
 
     df_transactions['price'] = 0
     df_transactions['price'] = df_transactions['price'].astype('int')
@@ -353,21 +357,19 @@ def exportToArray(dataframe):
 # In[2]:
 
 contract_address = '0xd77700fc3c78d1cb3acb1a9eac891ff59bc7946d'
-bool_internal = True
 bool_log = True
 
 
-def update_transactions():
+def update_transactions(return_new_ones=False):
     if bool_log: print("Updating Contract: " + contract_address)
 
-    list_transactions = updateTransactions(contract_address)
-    list_transactions_infos = updateTransactionInfos(contract_address)
+    list_transactions = updateTransactions(contract_address, return_new_ones)
+    list_transactions_infos = updateTransactionInfos(contract_address, return_new_ones)
 
-    if bool_internal:
-        list_internal_transactions = updateInternalTransactions(contract_address)
+    list_internal_transactions = updateInternalTransactions(contract_address, return_new_ones)
 
-    dataframe = createDataframe(list_transactions, list_transactions_infos, list_internal_transactions,
-                                internal=bool_internal)
+    dataframe = createDataframe(list_transactions, list_transactions_infos, list_internal_transactions, internal=True)
+
     # exportToJSON(dataframe)
     return exportToArray(dataframe)
 
