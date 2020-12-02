@@ -14,7 +14,7 @@ class Command(BaseCommand):
 
         try:
             latest_trade = Trade.objects.latest('timestamp')
-            latest_timestamp = latest_trade.timestmap
+            latest_timestamp = latest_trade.timestamp
         except Trade.DoesNotExist:
             latest_timestamp = 0
 
