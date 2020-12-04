@@ -16,17 +16,26 @@ def get_candlesticks(contract_address, interval: int = 1, from_timestamp=None, t
 
     interval = int(interval) * 60
 
-    try:
-        from_timestamp = int(from_timestamp)
-    except:
-        from_timestamp = 0
+    qs = Trade.objects.all()
 
-    try:
-        to_timestamp = int(to_timestamp)
-    except:
-        to_timestamp = Candlestick.objects.aggregate(to_timestamp=Max('timestamp'))['to_timestamp'] * 100
+    if from_timestamp:
+        try:
+            from_timestamp = int(from_timestamp)
+            qs = qs.filter(timestamp__gt=from_timestamp)
+        except:
+            pass
 
-    trades = Trade.objects.filter(timestamp__range=(from_timestamp, to_timestamp)).all()
+    if to_timestamp:
+        try:
+            to_timestamp = int(to_timestamp)
+            qs.filter(timestamp__lt=to_timestamp)
+        except:
+            pass
+
+    trades = qs.all()
+
+    if trades.count() == 0:
+        return []
 
     candlesticks = []
 
