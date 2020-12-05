@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+from django.db import transaction
 
 from prices.get_transactions import update_transactions
 from prices.models import Trade
@@ -7,6 +8,7 @@ from prices.models import Trade
 class Command(BaseCommand):
     help = 'update trades'
 
+    @transaction.atomic
     def handle(self, *args, **options):
         raw_transactions = update_transactions()
 
