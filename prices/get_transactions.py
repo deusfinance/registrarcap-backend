@@ -1,30 +1,15 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[2]:
 from time import sleep
-
 import pandas as pd
 import requests
 from datetime import datetime
 import json
 import os
-import sys
-
-# In[3]:
-
 
 pd.set_option('display.float_format', lambda x: '%.3f' % x)
 pd.set_option('display.max_colwidth', 400)
 
-# In[4]:
-
-
 apikey_ethplorer = 'EK-2Le3Q-DXBEUjQ-bsqj1'
 apikey_etherscan = 'Z38JUQ2M61Z7TWK5EDB1NK783RRXPYBWRJ'
-
-
-# In[5]:
 
 
 def updateTransactions(contract_address, return_new_ones=False):
@@ -83,9 +68,6 @@ def updateTransactions(contract_address, return_new_ones=False):
         return list_transactions
 
 
-# In[1]:
-
-
 def exportToJSON(dataframe):
     if bool_log: print("Exporting to Json..")
     json_data = {}
@@ -119,9 +101,6 @@ def exportToJSON(dataframe):
         json.dump(json_data, fp)
 
     if bool_log: print("Done.\n")
-
-
-# In[6]:
 
 
 def updateTransactionInfos(contract_address, return_new_ones=False):
@@ -187,9 +166,6 @@ def updateTransactionInfos(contract_address, return_new_ones=False):
     return list_transactions_infos
 
 
-# In[7]:
-
-
 def updateInternalTransactions(list_transactions, return_new_ones=False):
     if bool_log: print("Updating internal transactions..")
     with open('./' + contract_address + '/transactions.json') as json_file:
@@ -253,9 +229,6 @@ def updateInternalTransactions(list_transactions, return_new_ones=False):
     return list_transaction_internal_infos
 
 
-# In[8]:
-
-
 def createDataframe(list_transactions, list_transactions_infos, list_internal_transactions, *args, **kwargs):
     if bool_log: print("Creating dataframe..")
     df_transactions = pd.DataFrame.from_dict(list_transactions[1:])
@@ -307,22 +280,13 @@ def createDataframe(list_transactions, list_transactions_infos, list_internal_tr
     return df_transactions
 
 
-# In[9]:
-
-
 def plot(dataframe):
     if bool_log: print("Creating plot..\n")
     df_plot = dataframe.groupby('hour')['price'].mean()
     df_plot.plot(figsize=(5, 5));
 
 
-# In[13]:
-
-
 # def exportToJSON(dataframe):
-
-
-# In[14]:
 
 
 def exportToCSV(dataframe):
@@ -334,9 +298,6 @@ def exportToCSV(dataframe):
                                                                    index=False)
 
     # return dataframe[['value', 'value(token)', 'transactionType']]
-
-
-# In[15]:
 
 
 def exportToArray(dataframe):
@@ -353,8 +314,6 @@ def exportToArray(dataframe):
     print(dataframe[['hour',  # 'value', 'value(token)', 'transactionType',
                      'price']].to_numpy())
 
-
-# In[2]:
 
 contract_address = '0xd77700fc3c78d1cb3acb1a9eac891ff59bc7946d'
 bool_log = True
