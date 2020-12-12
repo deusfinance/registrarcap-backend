@@ -48,11 +48,15 @@ def get_candlesticks(contract_address, interval: int = 1, from_timestamp=None, t
     candlestick_timestamp = max(trades[0].timestamp, from_timestamp)
     candlestick_timestamp = candlestick_timestamp - candlestick_timestamp % interval
 
+    now_timestamp = int(datetime.now().timestamp())
+    last_candlestick_timestamp = now_timestamp - now_timestamp % interval
+
     high_price = -math.inf
     low_price = math.inf
     volume = 0
 
     trades_count = len(trades)
+    trades_in_interval = 0
     for i in range(trades_count):
         trade = trades[i]
 
@@ -87,9 +91,26 @@ def get_candlesticks(contract_address, interval: int = 1, from_timestamp=None, t
             open_price = close_price
             high_price = -math.inf
             low_price = math.inf
+            trades_in_interval = 0
 
         high_price = max(high_price, price)
         low_price = min(low_price, price)
+        trades_in_interval += 1
+
+    candlestick_timestamp = candlesticks[-1]['t']
+    price = candlesticks[-1]['c']
+    volume = candlesticks[-1]['v']
+    while candlestick_timestamp < last_candlestick_timestamp:
+        candlestick_timestamp += interval
+
+        candlesticks.append({
+            't': candlestick_timestamp,
+            'o': price,
+            'h': price,
+            'l': price,
+            'c': price,
+            'v': volume
+        })
 
     return candlesticks
 
