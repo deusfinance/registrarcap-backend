@@ -13,12 +13,13 @@ apikey_etherscan = 'Z38JUQ2M61Z7TWK5EDB1NK783RRXPYBWRJ'
 
 
 def updateTransactions(contract_address, return_new_ones=False):
-    if bool_log: print("------------------------------------------")
-    if bool_log: print("Updating transactions..")
-    latest_block = int(requests.get(
-        "https://api.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=" + apikey_etherscan).json()['result'],
-                       0)
-    if (os.path.isdir('./' + contract_address + '/')):
+    print("------------------------------------------")
+    print("Updating transactions..")
+    latest_block = int(
+        requests.get(
+            "https://api.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=" + apikey_etherscan
+        ).json()['result'], 0)
+    if os.path.isdir('./' + contract_address + '/'):
         if os.path.isfile('./' + contract_address + '/transactions.json'):
             try:
                 with open('./' + contract_address + '/transactions.json') as json_file:
@@ -278,15 +279,6 @@ def createDataframe(list_transactions, list_transactions_infos, list_internal_tr
     df_transactions.loc[mask, 'price'] = df_transactions.loc[mask, 'value'] / df_transactions.loc[mask, 'value(token)']
     if bool_log: print("Dataframe created\n------------------------------------------")
     return df_transactions
-
-
-def plot(dataframe):
-    if bool_log: print("Creating plot..\n")
-    df_plot = dataframe.groupby('hour')['price'].mean()
-    df_plot.plot(figsize=(5, 5));
-
-
-# def exportToJSON(dataframe):
 
 
 def exportToCSV(dataframe):
