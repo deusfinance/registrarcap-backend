@@ -32,7 +32,7 @@ def get_candlesticks(contract_address, interval: int = 1, from_timestamp=None, t
     if to_timestamp:
         try:
             to_timestamp = int(to_timestamp)
-            qs.filter(timestamp__lt=to_timestamp)
+            qs = qs.filter(timestamp__lt=to_timestamp)
         except:
             pass
 
@@ -45,7 +45,8 @@ def get_candlesticks(contract_address, interval: int = 1, from_timestamp=None, t
 
     open_price = trades[0].price
 
-    candlestick_timestamp = from_timestamp - from_timestamp % interval
+    candlestick_timestamp = max(trades[0].timestamp, from_timestamp)
+    candlestick_timestamp = candlestick_timestamp - candlestick_timestamp % interval
 
     high_price = -math.inf
     low_price = math.inf
