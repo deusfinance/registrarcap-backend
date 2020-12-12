@@ -66,6 +66,12 @@ def get_candlesticks(contract_address, interval: int = 1, from_timestamp=None, t
             else:
                 close_price = trades[i - 1].price
 
+            if high_price == -math.inf:
+                high_price = open_price
+
+            if low_price == math.inf:
+                low_price = open_price
+
             candlesticks.append({
                 't': candlestick_timestamp,
                 'o': open_price,
