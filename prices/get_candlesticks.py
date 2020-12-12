@@ -1,4 +1,5 @@
 import math
+from datetime import datetime, timedelta
 
 from django.db.models.aggregates import Max
 
@@ -21,9 +22,12 @@ def get_candlesticks(contract_address, interval: int = 1, from_timestamp=None, t
     if from_timestamp:
         try:
             from_timestamp = int(from_timestamp)
-            qs = qs.filter(timestamp__gt=from_timestamp)
         except:
-            pass
+            from_timestamp = None
+
+    if not from_timestamp:
+        from_timestamp = int((datetime.now() - timedelta(days=30)).timestamp())
+    qs = qs.filter(timestamp__gt=from_timestamp)
 
     if to_timestamp:
         try:
@@ -39,24 +43,29 @@ def get_candlesticks(contract_address, interval: int = 1, from_timestamp=None, t
 
     candlesticks = []
 
-    open_time = trades[0].timestamp
     open_price = trades[0].price
 
-    candlestick_timestamp = open_time - open_time % 100
+    candlestick_timestamp = from_timestamp - from_timestamp % interval
 
     high_price = -math.inf
     low_price = math.inf
     volume = 0
 
-    for i in range(len(trades)):
+    trades_count = len(trades)
+    for i in range(trades_count):
         trade = trades[i]
 
         timestamp = trade.timestamp
         price = trade.price
         volume += price
 
-        if candlestick_timestamp + interval < timestamp:
-            close_price = trades[i - 1].price
+        if candlestick_timestamp + interval < timestamp or i == trades_count - 1:
+
+            if i == 0:
+                close_price = open_price
+            else:
+                close_price = trades[i - 1].price
+
             candlesticks.append({
                 't': candlestick_timestamp,
                 'o': open_price,
