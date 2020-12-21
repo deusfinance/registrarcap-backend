@@ -28,16 +28,22 @@ class Command(BaseCommand):
 
         raw_transactions = get_trades(latest_block, latest_timestamp, limit=limit)
 
+        duplicates = 0
         for tx in raw_transactions:
-            timestamp = int(tx[0].timestamp())
+            transaction_hash = tx[3]
 
-            trades.append(Trade(**{
-                "timestamp": timestamp,
+            trade_data = {
+                "timestamp": int(tx[0].timestamp()),
                 "block": tx[1],
                 "price": tx[2],
-                "hash": tx[3]
-            }))
+                "hash": transaction_hash
+            }
 
-        trades.sort(key=lambda o: o.timestamp)
+            if not Trade.objects.filter(hash=transaction_hash).exists():
+                trade = Trade(**trade_data)
+                trade.save()
+            else:
+                duplicates += 1
+                print('duplicate hash', trade_data)
 
-        Trade.objects.bulk_create(trades)
+        print("{} of {} trades has duplicate hashes".format(duplicates, len(raw_transactions)))
