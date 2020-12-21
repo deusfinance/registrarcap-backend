@@ -21,6 +21,7 @@ class Command(BaseCommand):
             latest_trade = Trade.objects.latest('timestamp')
             latest_timestamp = latest_trade.timestamp
             latest_block = latest_trade.block
+            print("latest_trade: #{}".format(latest_trade.id))
         except Trade.DoesNotExist:
             latest_timestamp = 0
             latest_block = 0

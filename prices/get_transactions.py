@@ -15,7 +15,7 @@ apikey_etherscan = 'Z38JUQ2M61Z7TWK5EDB1NK783RRXPYBWRJ'
 
 
 def get_transactions(latest_block: int, latest_timestamp: int, limit: int):
-    print("Getting transactions..")
+    print("Getting transactions from block {} and timestamp {}".format(latest_block, latest_timestamp))
     end_block = int(
         requests.get(
             "https://api.etherscan.io/api",
