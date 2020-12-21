@@ -72,6 +72,7 @@ class Transaction:
 class Trade(models.Model):
     timestamp = models.IntegerField()
     price = models.DecimalField(max_digits=38, decimal_places=18)
+    block = models.IntegerField()
 
     class Meta:
         ordering = ('timestamp', )

@@ -1,9 +1,11 @@
 from time import sleep
 import pandas as pd
 import requests
-from datetime import datetime
+from datetime import datetime, date
 import json
 import os
+
+from backend.settings import BASE_DIR
 
 pd.set_option('display.float_format', lambda x: '%.3f' % x)
 pd.set_option('display.max_colwidth', 400)
@@ -12,65 +14,45 @@ apikey_ethplorer = 'EK-2Le3Q-DXBEUjQ-bsqj1'
 apikey_etherscan = 'Z38JUQ2M61Z7TWK5EDB1NK783RRXPYBWRJ'
 
 
-def updateTransactions(contract_address, return_new_ones=False):
-    print("------------------------------------------")
-    print("Updating transactions..")
-    latest_block = int(
+def get_transactions(latest_block: int, latest_timestamp: int, limit: int):
+    print("Getting transactions..")
+    end_block = int(
         requests.get(
-            "https://api.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=" + apikey_etherscan
-        ).json()['result'], 0)
-    if os.path.isdir('./' + contract_address + '/'):
-        if os.path.isfile('./' + contract_address + '/transactions.json'):
-            try:
-                with open('./' + contract_address + '/transactions.json') as json_file:
-                    list_transactions = json.load(json_file)
-                    latest_local_timestamp = int(list_transactions[-1]['timeStamp'])
-                    latest_local_block = int(list_transactions[-1]['blockNumber'])
-            except:
-                list_transactions = []
-                latest_local_block = 0
-                latest_local_timestamp = 0
-        else:
-            with open('./' + contract_address + '/transactions.json', 'w'):
-                pass
-            list_transactions = []
-            latest_local_block = 0
-            latest_local_timestamp = 0
-    else:
-        os.makedirs('./' + contract_address + '/')
-        with open('./' + contract_address + '/transactions.json', 'w'):
-            pass
-        list_transactions = []
-        latest_local_block = 0
-        latest_local_timestamp = 0
+            "https://api.etherscan.io/api",
+            params={
+                'module': 'proxy',
+                'action': 'eth_blockNumber',
+                'apikey': apikey_etherscan
+            }
+        ).json()['result'],
+        0
+    )
 
-    if latest_local_block != latest_block:
+    if latest_block != end_block:
+        transactions = requests.get(
+            "http://api.etherscan.io/api",
+            params={
+                'module': 'account',
+                'action': 'txlist',
+                'address': contract_address,
+                'startblock': latest_block,
+                'endblock': end_block,
+                'sort': 'asc',
+                'apikey': apikey_etherscan,
+                'page': 1,
+                'offset': limit,
+            }
+        ).json()['result']
 
-        request = "http://api.etherscan.io/api?module=account&action=txlist&address=" + str(
-            contract_address) + "&startblock=" + str(latest_local_block) + "&endblock=" + str(
-            latest_block) + "&sort=asc&apikey=" + str(apikey_etherscan)
+        transactions = list(filter(lambda tx: int(tx['timeStamp']) > latest_timestamp, transactions))
 
-        list_api_transactions = requests.get(request).json()['result']
-        list_api_transactions = list(
-            filter(lambda tx: int(tx['timeStamp']) > latest_local_timestamp, list_api_transactions))
+        print("There is {} transactions".format(len(transactions)))
 
-        list_transactions.extend(list_api_transactions)
-
-        if len(list_api_transactions) > 0:
-            if bool_log: print("Added " + str(
-                len(list_api_transactions)) + " new transactions.\n------------------------------------------")
-        else:
-            if bool_log: print("Alread up to date.")
-        with open('./' + contract_address + '/transactions.json', 'w') as file:
-            file.write(json.dumps(list_transactions))
-
-        if return_new_ones:
-            return list_api_transactions
-        return list_transactions
+        return transactions
 
 
 def exportToJSON(dataframe):
-    if bool_log: print("Exporting to Json..")
+    print("Exporting to Json..")
     json_data = {}
     if (contract_address == "0xD77700fC3C78d1Cb3aCb1a9eAC891ff59bC7946D".lower()):
         response_ethplorer = requests.get(
@@ -101,140 +83,65 @@ def exportToJSON(dataframe):
     with open('./' + contract_address + '/export.json', 'w') as fp:
         json.dump(json_data, fp)
 
-    if bool_log: print("Done.\n")
+    print("Done.\n")
 
 
-def updateTransactionInfos(contract_address, return_new_ones=False):
-    if bool_log: print("Updating transaction infos..")
-    with open('./' + contract_address + '/transactions.json') as json_file:
-        list_transactions = json.load(json_file)
+def updateTransactionInfos(transactions):
+    print("Getting transactions infos..")
 
-    if (os.path.isdir('./' + contract_address + '/')):
-        if os.path.isfile('./' + contract_address + '/transaction-infos.json'):
-            try:
-                with open('./' + contract_address + '/transaction-infos.json') as json_file:
-                    list_transactions_infos = json.load(json_file)
-                    latest_local_timestamp = None
-                    i = -1
-                    while not latest_local_timestamp:
-                        latest_local_timestamp = list_transactions_infos[i]['timestamp']
-                        i -= 1
-            except:
-                list_transactions_infos = []
-                if os.path.isfile('./' + contract_address + '/transactions.json'):
-                    latest_local_timestamp = int(list_transactions[0]['timeStamp'])
-                else:
-                    latest_local_timestamp = 0
-        else:
-            with open('./' + contract_address + '/transaction-infos.json', 'w'):
-                pass
-            list_transactions_infos = []
-            latest_local_timestamp = 0
-    else:
-        os.makedirs('./' + contract_address + '/')
-        with open('./' + contract_address + '/transaction-infos.json', 'w'):
-            pass
-        list_transactions_infos = []
-        latest_local_timestamp = 0
+    transactions_infos = []
+    transactions_len = len(transactions)
+    for i in range(transactions_len):
+        transaction = transactions[i]
+        print("{} / {}".format(transactions_len, i + 1))
 
-    list_api_transactionInfos = []
-    length_transactions = len(
-        list(filter(lambda tx: int(tx['timeStamp']) > int(latest_local_timestamp), list_transactions)))
+        transaction_info = requests.get(
+            "https://api.ethplorer.io/getTxInfo/{}".format(transaction['hash']),
+            params={
+                'apiKey': apikey_ethplorer
+            }
+        ).json()
 
-    if length_transactions > 0:
-        abc = 0
-        for transaction in list(
-                filter(lambda tx: int(tx['timeStamp']) > int(latest_local_timestamp), list_transactions)):
-            request = "https://api.ethplorer.io/getTxInfo/" + str(transaction['hash']) + "?apiKey=" + str(
-                apikey_ethplorer)
-            print(abc)
-            abc += 1
-            list_api_transactionInfos.append(requests.get(request).json())
-            sleep(0.2)
+        transactions_infos.append(transaction_info)
+        sleep(0.2)
 
-        list_transactions_infos.extend(list_api_transactionInfos)
-
-        with open('./' + contract_address + '/transaction-infos.json', 'w') as file:
-            file.write(json.dumps(list_transactions_infos))
-
-        if bool_log: print("Added " + str(
-            len(list_api_transactionInfos)) + " new transaction infos.\n------------------------------------------")
-    else:
-        if bool_log: print("Already up to date.\n------------------------------------------")
-
-    if return_new_ones:
-        return list_api_transactionInfos
-    return list_transactions_infos
+    return transactions_infos
 
 
-def updateInternalTransactions(list_transactions, return_new_ones=False):
-    if bool_log: print("Updating internal transactions..")
-    with open('./' + contract_address + '/transactions.json') as json_file:
-        list_transactions = json.load(json_file)
+def updateInternalTransactions(transactions):
+    print("Getting transactions internal infos..")
 
-    if os.path.isdir('./' + contract_address + '/'):
-        if os.path.isfile('./' + contract_address + '/transaction-internal-infos.json'):
-            try:
-                with open('./' + contract_address + '/transaction-internal-infos.json') as json_file:
-                    list_transaction_internal_infos = json.load(json_file)
-                    latest_local_timestamp = list_transaction_internal_infos[-1]['result'][0]['timeStamp']
-            except:
-                list_transaction_internal_infos = []
-                if os.path.isfile('./' + contract_address + '/transactions.json'):
-                    latest_local_timestamp = int(list_transactions[0]['timeStamp'])
-                else:
-                    latest_local_timestamp = 0
-        else:
-            with open('./' + contract_address + '/transaction-internal-infos.json', 'w'):
-                pass
-            list_transaction_internal_infos = []
-            latest_local_timestamp = 0
-    else:
-        os.makedirs('./' + contract_address + '/')
-        with open('./' + contract_address + '/transaction-internal-infos.json', 'w'):
-            pass
-        list_transaction_internal_infos = []
-        latest_local_timestamp = 0
+    transactions_internal_infos = []
 
-    list_api_transaction_internal_infos = []
-    length_transactions = len(
-        list(filter(lambda tx: int(tx['timeStamp']) > int(latest_local_timestamp), list_transactions)))
+    transactions_len = len(transactions)
+    for i in range(transactions_len):
+        transaction = transactions[i]
+        print("{} / {}".format(transactions_len, i + 1))
 
-    if length_transactions > 0:
-        abc = 0
-        for transaction in list(
-                filter(lambda tx: int(tx['timeStamp']) > int(latest_local_timestamp), list_transactions)):
-            print(abc)
-            abc += 1
-            request = "http://api.etherscan.io/api?module=account&action=txlistinternal&txhash=" + str(
-                transaction['hash']) + "&apikey=" + apikey_etherscan
-            response = requests.get(request).json()
+        response = requests.get(
+            "http://api.etherscan.io/api",
+            params={
+                "module": "account",
+                "action": "txlistinternal",
+                "txhash": transaction['hash'],
+                "apikey": apikey_etherscan
 
-            if int(response['status']) == 1:
-                response['result'][0]['hash'] = transaction['hash']
+            }
+        ).json()
 
-            list_api_transaction_internal_infos.append(response)
+        if int(response['status']) == 1:
+            response['result'][0]['hash'] = transaction['hash']
 
-        list_transaction_internal_infos.extend(list_api_transaction_internal_infos)
+        transactions_internal_infos.append(response)
 
-        with open('./' + contract_address + '/transaction-internal-infos.json', 'w') as file:
-            file.write(json.dumps(list_transaction_internal_infos))
-
-        if bool_log: print("Added " + str(
-            length_transactions) + " new internal transactions.\n------------------------------------------")
-    else:
-        if bool_log: print("Already up to date.\n------------------------------------------")
-
-    if return_new_ones:
-        return list_api_transaction_internal_infos
-    return list_transaction_internal_infos
+    return transactions_internal_infos
 
 
-def createDataframe(list_transactions, list_transactions_infos, list_internal_transactions, *args, **kwargs):
-    if bool_log: print("Creating dataframe..")
-    df_transactions = pd.DataFrame.from_dict(list_transactions[1:])
+def createDataframe(list_transactions, list_transactions_infos, list_internal_transactions):
+    print("Creating dataframe..")
+    df_transactions = pd.DataFrame.from_dict(list_transactions)
 
-    df_infos = pd.DataFrame.from_dict(list_transactions_infos[1:])
+    df_infos = pd.DataFrame.from_dict(list_transactions_infos)
     df_infos['value(token)'] = 0
     df_infos['date'] = ''
 
@@ -277,19 +184,8 @@ def createDataframe(list_transactions, list_transactions_infos, list_internal_tr
     df_transactions['price'] = df_transactions['price'].astype('int')
     mask = (df_transactions['value(token)'] != 0)
     df_transactions.loc[mask, 'price'] = df_transactions.loc[mask, 'value'] / df_transactions.loc[mask, 'value(token)']
-    if bool_log: print("Dataframe created\n------------------------------------------")
+    print("Dataframe created\n------------------------------------------")
     return df_transactions
-
-
-def exportToCSV(dataframe):
-    dataframe['transactionType'] = ''
-    dataframe.loc[dataframe['from'] == '0x0000000000000000000000000000000000000000', 'transactionType'] = 'buy'
-    dataframe.loc[dataframe['to'] == '0x0000000000000000000000000000000000000000', 'transactionType'] = 'sell'
-
-    dataframe[['value', 'value(token)', 'transactionType']].to_csv('./' + contract_address + '/highcharts-export.csv',
-                                                                   index=False)
-
-    # return dataframe[['value', 'value(token)', 'transactionType']]
 
 
 def exportToArray(dataframe):
@@ -297,34 +193,46 @@ def exportToArray(dataframe):
     dataframe.loc[dataframe['from'] == '0x0000000000000000000000000000000000000000', 'transactionType'] = 'buy'
     dataframe.loc[dataframe['to'] == '0x0000000000000000000000000000000000000000', 'transactionType'] = 'sell'
 
-    dataframe = dataframe.groupby(['timestamp', 'value', 'value(token)', 'transactionType', 'hour'])[
+    dataframe = dataframe.groupby(['timestamp', 'value', 'value(token)', 'transactionType', 'hour', 'blockNumber'])[
         'price'].mean().reset_index()
 
-    return dataframe[['hour',  # 'value', 'value(token)', 'transactionType',
+    return dataframe[['hour', 'blockNumber',  # 'value', 'value(token)', 'transactionType',
                       'price']].to_numpy()
-
-    print(dataframe[['hour',  # 'value', 'value(token)', 'transactionType',
-                     'price']].to_numpy())
 
 
 contract_address = '0xd77700fc3c78d1cb3acb1a9eac891ff59bc7946d'
-bool_log = True
 
 
-def update_transactions(return_new_ones=False):
-    if bool_log: print("Updating Contract: " + contract_address)
+def get_trades(latest_block, latest_timestamp, limit=100):
+    print("Updating Contract: " + contract_address)
 
-    list_transactions = updateTransactions(contract_address, return_new_ones)
-    list_transactions_infos = updateTransactionInfos(contract_address, return_new_ones)
+    transactions = get_transactions(latest_block, latest_timestamp, limit)
+    transactions_infos = updateTransactionInfos(transactions)
+    transactions_internal_infos = updateInternalTransactions(transactions)
 
-    list_internal_transactions = updateInternalTransactions(contract_address, return_new_ones)
+    if len(transactions) != 0:
+        dataframe = createDataframe(transactions, transactions_infos, transactions_internal_infos)
+        path = "{}/archived_transactions/{}/{}".format(BASE_DIR, contract_address, date.today())
+        if not os.path.exists(path):
+            os.makedirs(path)
 
-    dataframe = createDataframe(list_transactions, list_transactions_infos, list_internal_transactions, internal=True)
+        with open("{}/{}-transactions.json".format(path, datetime.now().strftime("%H%M")), 'w') as file:
+            file.write(json.dumps({
+                'latest_block': latest_block,
+                'latest_timestamp': latest_timestamp,
+                'limit': limit,
+                'transactions': transactions,
+                'transactions_infos': transactions_infos,
+                'transaction_internal_infos': transactions_internal_infos,
+            }))
 
-    # exportToJSON(dataframe)
-    return exportToArray(dataframe)
+        return exportToArray(dataframe)
+
+    return []
 
 
 if __name__ == '__main__':
-    prices = update_transactions()
+    first_block = 10894792
+    first_timestamp = 1600546741
+    prices = get_trades(first_block, first_timestamp, limit=10)
     print(prices)

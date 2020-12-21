@@ -1,5 +1,6 @@
 .history
 0x*
+archived_transactions/0x*
 *\__pycache__*
 db.sqlite3
 .idea

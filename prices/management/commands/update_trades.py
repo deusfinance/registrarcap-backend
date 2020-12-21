@@ -1,34 +1,39 @@
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandParser
 from django.db import transaction
 
-from prices.get_transactions import update_transactions
+from prices.get_transactions import get_trades
 from prices.models import Trade
 
 
 class Command(BaseCommand):
     help = 'update trades'
 
+    def add_arguments(self, parser: CommandParser) -> None:
+        parser.add_argument('limit', nargs='?', type=int, default=1000)
+
     @transaction.atomic
     def handle(self, *args, **options):
-        raw_transactions = update_transactions()
+        limit = options['limit']
 
         trades = []
 
         try:
             latest_trade = Trade.objects.latest('timestamp')
             latest_timestamp = latest_trade.timestamp
+            latest_block = latest_trade.block
         except Trade.DoesNotExist:
             latest_timestamp = 0
+            latest_block = 0
+
+        raw_transactions = get_trades(latest_block, latest_timestamp, limit=limit)
 
         for tx in raw_transactions:
-
             timestamp = int(tx[0].timestamp())
-            if timestamp < latest_timestamp:
-                continue
 
             trades.append(Trade(**{
                 "timestamp": timestamp,
-                "price": tx[1]
+                "block": tx[1],
+                "price": tx[2]
             }))
 
         trades.sort(key=lambda o: o.timestamp)
