@@ -34,7 +34,8 @@ class Command(BaseCommand):
             trades.append(Trade(**{
                 "timestamp": timestamp,
                 "block": tx[1],
-                "price": tx[2]
+                "price": tx[2],
+                "hash": tx[3]
             }))
 
         trades.sort(key=lambda o: o.timestamp)

@@ -70,6 +70,7 @@ class Transaction:
 
 
 class Trade(models.Model):
+    hash = models.CharField(max_length=255, null=True, unique=True)
     timestamp = models.IntegerField()
     price = models.DecimalField(max_digits=38, decimal_places=18)
     block = models.IntegerField()
