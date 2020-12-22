@@ -76,7 +76,7 @@ class Trade(models.Model):
     block = models.IntegerField()
 
     class Meta:
-        ordering = ('timestamp', )
+        ordering = ('timestamp', 'block')
 
 
 class Candlestick(models.Model):
