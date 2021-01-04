@@ -4,7 +4,7 @@ from rest_framework.fields import JSONField
 
 class Currency(models.Model):
     name = models.CharField(max_length=100)
-    symbol = models.CharField(max_length=100)
+    symbol = models.CharField(max_length=100)  # ETH
     contract = models.CharField(max_length=255)
 
 

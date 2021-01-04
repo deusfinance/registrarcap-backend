@@ -178,11 +178,18 @@ def createDataframe(list_transactions, list_transactions_infos, list_internal_tr
         lambda x: float(x[0]['value']) / 1000000000000000000
     )
 
-    df_transactions.loc[df_transactions['to'] == '0x0000000000000000000000000000000000000000', 'value'] = \
-        df_transactions.loc[df_transactions['to'] == '0x0000000000000000000000000000000000000000']['hash'].map(
-            df_internal[df_internal['hash'].isin(
-                df_transactions.loc[df_transactions['to'] == '0x0000000000000000000000000000000000000000'][
-                    'hash'])].set_index('hash')['value'])
+    df_transactions.loc[
+        df_transactions['to'] == '0x0000000000000000000000000000000000000000',
+        'value'
+    ] = df_transactions.loc[
+        df_transactions['to'] == '0x0000000000000000000000000000000000000000']['hash'].map(
+        df_internal[
+            df_internal['hash'].isin(
+                df_transactions.loc[
+                    df_transactions['to'] == '0x0000000000000000000000000000000000000000'
+                ]['hash'])
+        ].set_index('hash')['value']
+    )
 
     df_transactions['price'] = 0
     df_transactions['price'] = df_transactions['price'].astype('int')
@@ -243,6 +250,7 @@ if __name__ == '__main__':
 
     first_block = 11492339
     first_timestamp = 1608494400
+
 
     prices = get_trades(first_block, first_timestamp, limit=2)
     print(prices)
