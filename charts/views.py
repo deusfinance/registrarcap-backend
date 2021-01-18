@@ -1,6 +1,7 @@
 import datetime
 import math
 
+from django.db.models import Q
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -26,7 +27,6 @@ class GetConfigView(APIView):
                 "value": 'crypto',
             }],
             "supported_resolutions": ['60', 'D'],
-            "currency_codes": ["USD", "ETH", "BTC"],
 
             "supports_marks": False,
             "supports_timescale_marks": False,
@@ -86,29 +86,74 @@ def item_to_list(item, keys, n=10):
 symbols = item_to_list(deus_symbol, ['name', 'description', 'ticker'], 100)
 
 
-class ResolveSymbolView(APIView):
-
-    def get(self, request):
-        query_name = request.GET.get('symbol')  # symbol name
-        symbol = [symbol for symbol in symbols if (symbol['ticker'] == query_name)][0]
-        return Response(symbol)
-
-
 class SearchSymbolView(APIView):
 
     def get(self, request):
         query = request.GET.get('query', '')
         limit = int(request.GET.get('limit', 10))
-        filtered_symbols = list(filter(lambda s: query.lower() in s['name'].lower(), symbols))
-        serialized_symbols = list(map(lambda s: {
-            'symbol': s['name'],
-            'ticker': s['ticker'],
-            'full_name': "DEUS: {}".format(s['name']),
-            'description': s['description'],
-            'exchange': s['exchange'],
-            'type': s['type']
-        }, filtered_symbols))
-        return Response(serialized_symbols[:limit])
+
+        qs = Currency.objects.filter(
+            Q(
+                Q(name__icontains=query) |
+                Q(symbol__icontains=query) |
+                Q(description__icontains=query)
+            )
+        )[:limit]
+
+        result = []
+        target_currencys = ['deus', 'eth', 'usd', 'btc']
+        for currency in qs.all():
+            for target_currency in target_currencys:
+                result.append({
+                    'symbol': "{}/{}".format(currency.name.upper(), target_currency.upper()),
+                    'ticker': "{}/{}".format(currency.symbol, target_currency.lower()),
+                    'full_name': "{} to {}".format(currency.name.upper(), target_currency.upper()),
+                    'description': currency.description,
+                    'exchange': 'DEUS Swap',
+                    'type': 'crypto'
+                })
+
+        return Response(result[:limit])
+
+
+class ResolveSymbolView(APIView):
+
+    def get(self, request):
+        ticker = request.GET.get('symbol')  # ticker
+        currency_symbol, target_currency = ticker.split('/')
+        currency = Currency.objects.get(symbol=currency_symbol)
+
+        symbol = {
+            "name": "{}/{}".format(currency.name.upper(), target_currency.upper()),
+            'ticker': "{}/{}".format(currency.symbol, target_currency.lower()),
+            "description": currency.description,
+
+            "type": "crypto",
+
+            "session": "24x7",
+            "holidays": "",
+            "corrections": "",
+
+            "exchange": "DEUS Swap",
+            "listed_exchange": "DEUS Swap",
+
+            "timezone": "Etc/UTC",
+
+            # TL,DR
+            "minmov": 1,
+            "pricescale": 1000000,
+            "has_intraday": True,
+            "has_weekly_and_monthly": True,
+            "volume_precision": 100,
+
+            "data_status": "streaming",
+
+            "supported_resolutions": ['60', 'D'],
+
+            "has_no_volume": False,
+        }
+
+        return Response(symbol)
 
 
 def get_candlesticks(currency: Currency, interval: int = 1, from_timestamp=None, to_timestamp=None,
@@ -227,13 +272,17 @@ def get_candlesticks(currency: Currency, interval: int = 1, from_timestamp=None,
 
 class GetBarsView(APIView):
     def get(self, request):
-        currency = get_object_or_404(Currency, pk=request.GET['symbol'])
+
+        ticker = request.GET.get('symbol')  # ticker
+        currency_symbol, target_currency = ticker.split('/')
+        currency = get_object_or_404(Currency, symbol=currency_symbol)
 
         candlesticks = get_candlesticks(
             currency,
             self.get_resolution(),
             request.GET.get('from'),
             request.GET.get('to'),
+            target_currency
         )
 
         result = {
