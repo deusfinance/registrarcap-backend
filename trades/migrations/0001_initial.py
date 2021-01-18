@@ -39,7 +39,7 @@ class Migration(migrations.Migration):
                 ('low_price', models.DecimalField(decimal_places=18, max_digits=38)),
                 ('close_price', models.DecimalField(decimal_places=18, max_digits=38)),
                 ('volume', models.DecimalField(decimal_places=18, max_digits=38)),
-                ('currency', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='candlesticks', to='prices.Currency')),
+                ('currency', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='candlesticks', to='trades.Currency')),
             ],
         ),
     ]

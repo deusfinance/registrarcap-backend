@@ -15,11 +15,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-
-from prices.views import PricesApiView, CandlesticksApiView
+from django.urls.conf import include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('prices/', PricesApiView.as_view()),
-    path('candles', CandlesticksApiView.as_view())
+    path('charts', include('charts.urls'))
 ]

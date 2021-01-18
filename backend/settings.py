@@ -36,7 +36,8 @@ INSTALLED_APPS = [
     'rest_framework',
 
     'users',
-    'prices'
+    'trades',
+    'charts',
 
 ]
 

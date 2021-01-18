@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('prices', '0002_remove_candlestick_currency'),
+        ('trades', '0002_remove_candlestick_currency'),
     ]
 
     operations = [
