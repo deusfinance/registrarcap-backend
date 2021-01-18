@@ -17,7 +17,7 @@ class UpdateTrades:
     def __init__(self, currency: Currency, get_trades):
         self.get_trades = get_trades
         self.currency = currency
-        self.limit = 3
+        self.limit = 100
 
     def update(self):
         try:
