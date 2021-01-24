@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from web3 import Web3
 from datetime import datetime
 from requests import get
@@ -15,27 +17,16 @@ sps_abi = '[ { "inputs": [ { "internalType": "uint256", "name": "_endBlock", "ty
 def getLog(fromBlock, toBlock, page, offset):
     amm = w3.eth.contract(address=amm_addr, abi=amm_abi)
 
-    # amm.web3.eth.get
-
     get_trs_url = f'https://api.etherscan.io/api?module=account&action=txlist&address=0xD77700fC3C78d1Cb3aCb1a9eAC891ff59bC7946D&startblock={fromBlock}&endblock={toBlock}&sort=asc&apikey=9Z15YVP4D56SE3W6813MKG31X46V2IN6I8&page={page}&offset={offset}'
 
     trs = get(get_trs_url).json()['result']
     # print(trs)
 
-    # get_internal_trs_url = f'https://api.etherscan.io/api?module=account&action=txlistinternal&startblock={fromBlock}&endblock={toBlock}&page={page}&offset={offset}&sort=asc&apikey=9Z15YVP4D56SE3W6813MKG31X46V2IN6I8&address=0xD77700fC3C78d1Cb3aCb1a9eAC891ff59bC7946D'
-    # internal_trs = get(get_internal_trs_url).json()
-    # print(internal_trs)
-    # internal_trs = internal_trs['result']
-
-    # print(internal_trs)
-
-    # buy_filter = w3.eth.filter({'fromBlock': fromBlock, 'toBlock': toBlock, 'address': '0x3b62f3820e0b035cc4ad602dece6d796bc325325', 'topics' : ['0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef', '0x0000000000000000000000000000000000000000000000000000000000000000']})
-    # print(len(data))
+    get_internal_trs_url = f'https://api.etherscan.io/api?module=account&action=txlistinternal&startblock={fromBlock}&endblock={toBlock}&page={page}&offset={offset}&sort=asc&apikey=9Z15YVP4D56SE3W6813MKG31X46V2IN6I8&address=0xD77700fC3C78d1Cb3aCb1a9eAC891ff59bC7946D'
+    internal_trs = get(get_internal_trs_url).json()['result']
 
     buy = str(amm.get_function_by_name('buy'))
     sell = str(amm.get_function_by_name('sell'))
-
-    addr = w3.toChecksumAddress('0x3b62f3820e0b035cc4ad602dece6d796bc325325')
 
     out = {
         'isLastPage': True if len(trs) < offset else False,
@@ -52,19 +43,9 @@ def getLog(fromBlock, toBlock, page, offset):
                 # print('buy')
                 # print(tr)
                 fromHex = '0x000000000000000000000000' + tr['from'][2:]
-
-                buy_filter = w3.eth.filter(
-                    {'fromBlock': int(tr['blockNumber']), 'toBlock': int(tr['blockNumber']), 'address': addr,
-                     'topics': ['0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
-                                '0x0000000000000000000000000000000000000000000000000000000000000000', fromHex]})
-                tk_tr_data = buy_filter.get_all_entries()
-
+                get_token_trsfr_data_url = f"https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock={tr['blockNumber']}&toBlock={tr['blockNumber']}&address=0x3b62f3820e0b035cc4ad602dece6d796bc325325&topic0=0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef&topic0_1_opr=and&topic1=0x0000000000000000000000000000000000000000000000000000000000000000&topic1_2_opr=and&topic2={fromHex}&apikey=9Z15YVP4D56SE3W6813MKG31X46V2IN6I8"
+                tk_tr_data = get(get_token_trsfr_data_url).json()['result']
                 # print(tk_tr_data)
-
-                # get_token_trsfr_data_url = f"https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock={tr['blockNumber']}&toBlock={tr['blockNumber']}&address=0x3b62f3820e0b035cc4ad602dece6d796bc325325&topic0=0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef&topic0_1_opr=and&topic1=0x0000000000000000000000000000000000000000000000000000000000000000&topic1_2_opr=and&topic2={fromHex}&apikey=9Z15YVP4D56SE3W6813MKG31X46V2IN6I8"
-                # tk_tr_data = get(get_token_trsfr_data_url).json()['result']
-                # print(tk_tr_data)
-
                 info['deusAmount'] = int(tk_tr_data[0]['data'], 16) / 10 ** 18
                 info['etherAmount'] = int(tr['value']) / 10 ** 18
                 info['value'] = info['etherAmount'] / info['deusAmount']
@@ -73,11 +54,11 @@ def getLog(fromBlock, toBlock, page, offset):
                 # print('sell')
                 get_internal_trs_url = f'https://api.etherscan.io/api?module=account&action=txlistinternal&apikey=9Z15YVP4D56SE3W6813MKG31X46V2IN6I8&txhash={tr["hash"]}'
 
-                internal_trs = get(get_internal_trs_url).json()['result']
-                info['etherAmount'] = int(internal_trs[0]['value']) / 10 ** 18
+                # internal_trs = get(get_internal_trs_url).json()['result']
+                # info['etherAmount'] = int(internal_trs[0]['value']) / 10 ** 18
 
-                # internal_tr = [trx for trx in internal_trs if tr['hash'] == trx['hash']]
-                # info['etherAmount'] = int(internal_tr[0]['value']) / 10 ** 18
+                internal_tr = [trx for trx in internal_trs if tr['hash'] == trx['hash']]
+                info['etherAmount'] = int(internal_tr[0]['value']) / 10 ** 18
 
                 info['deusAmount'] = int(inputData[1]['tokenAmount']) / 10 ** 18
                 info['value'] = info['etherAmount'] / info['deusAmount']
@@ -94,11 +75,11 @@ def getLog(fromBlock, toBlock, page, offset):
             out['trs'].append(info)
 
         except Exception as e:
-            print(e)
+            # print(e)
             pass
     return out
 
 
 if __name__ == '__main__':
-    log = getLog(1, 'latest', 2, 10)
-    print(log)
+    log = getLog(10936349, 'latest', 1, 10)
+    pprint(log)
