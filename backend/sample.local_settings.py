@@ -19,3 +19,9 @@ DATABASES = {
     }
 }
 
+
+TELEGRAM_APP_ID = "***",
+TELEGRAM_API_HASH = "***",
+TELEGRAM_BOT_TOKEN = "***"
+
+COINMARKETCAP_API_KEY = "***"
