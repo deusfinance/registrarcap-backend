@@ -44,6 +44,9 @@ class UpdateTrades:
         new_trades_len = len(new_trades)
         print("There is {} new trades".format(new_trades_len))
 
+        if new_trades_len == 0:
+            return
+
         new_trades = list(filter(lambda t: t['timestamp'] >= from_timestamp, new_trades))
 
         self.fetch_prices(

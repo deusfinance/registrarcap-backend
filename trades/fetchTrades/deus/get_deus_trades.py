@@ -10,8 +10,12 @@ def get_deus_trades(from_block, limit, block_chunk=10000):
         print("- Get deus trades from block {} to block {}... ".format(from_block, to_block), end=" ")
         try:
             trades = get_history(from_block, to_block, limit)
+        except ValueError as e:
+            if e.args[0]['code'] == -32005:
+                print("Rate limit")
+            return result
         except Exception as e:
-            print(e)
+            print("Error:", type(e), e)
             return result + get_deus_trades(from_block, limit - len(result), block_chunk // 2)
 
         for trade in trades:

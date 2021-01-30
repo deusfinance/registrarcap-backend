@@ -14,6 +14,6 @@ class Command(BaseCommand):
         update_trades = UpdateTrades(currency, get_deus_trades)
         update_trades.update()
 
-        currency = Currency.objects.get(symbol='coinbase')
-        update_trades = UpdateTrades(currency, get_coinbase_trades)
-        update_trades.update()
+        # currency = Currency.objects.get(symbol='coinbase')
+        # update_trades = UpdateTrades(currency, get_coinbase_trades)
+        # update_trades.update()
