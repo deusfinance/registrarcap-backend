@@ -33,7 +33,11 @@ def get_deus_trades(from_block, limit, block_chunk=10000):
 
         print("{} trades found".format(len(trades)))
 
-        if len(result) >= limit or from_block > w3.eth.blockNumber:
+        if from_block > w3.eth.blockNumber:
+            print(" - - End of eth blocks")
+            break
+
+        if len(result) >= limit:
             break
 
         from_block = to_block
