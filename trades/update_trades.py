@@ -56,7 +56,8 @@ class UpdateTrades:
             prices = self.get_prices(
                 trade.pop('price'),
                 trade.pop('price_type'),
-                trade['timestamp']
+                trade['amount'],
+                trade['timestamp'],
             )
 
             try:
@@ -113,11 +114,16 @@ class UpdateTrades:
                 print("Coingecho limit reached, sleep for 60 seconds.")
                 sleep(60)
 
-    def get_prices(self, price, price_type, timestamp):
+    def get_prices(self, price, price_type, amount, timestamp):
         if price_type == 'eth':
             eth_price = price
-            eth_to_deus = list(map(lambda x: (x[0], 1 / x[1]), self.prices['deus_to_eth']))
-            deus_price = self.get_closest_price(timestamp, eth_to_deus)
+
+            if self.currency.symbol == 'deus':
+                deus_price = amount
+            else:
+                eth_to_deus = list(map(lambda x: (x[0], 1 / x[1]), self.prices['deus_to_eth']))
+                deus_price = self.get_closest_price(timestamp, eth_to_deus)
+
         elif price_type == 'deus':
             deus_price = price
             eth_price = self.get_closest_price(timestamp, self.prices['deus_to_eth'])

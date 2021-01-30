@@ -1,16 +1,19 @@
 import datetime
 
-from trades.fetchTrades.deus._GetHistory import getLog
+from trades.fetchTrades.deus._GetBuySell import get_history, w3
 
 
-def get_deus_trades(from_block, limit):
+def get_deus_trades(from_block, limit, block_chunk=10000):
     result = []
-    page = 1
+    to_block = from_block + block_chunk
     while True:
-        print("- Get deus trades from block {}. (page: {})".format(from_block, page), end=" ")
-        out = getLog(from_block, 'latest', page, limit)
-        trades = out['trs']
-        is_last_page = out['isLastPage']
+        print("- Get deus trades from block {} to block {}... ".format(from_block, to_block), end=" ")
+        try:
+            trades = get_history(from_block, to_block, limit)
+        except Exception as e:
+            print(e)
+            return result + get_deus_trades(from_block, limit - len(result), block_chunk // 2)
+
         for trade in trades:
             timestamp = datetime.datetime.fromisoformat(trade['timeStamp']).timestamp()
             result.append({
@@ -28,14 +31,12 @@ def get_deus_trades(from_block, limit):
                 }
             })
 
-        print("{} trades found".format(len(result)))
+        print("{} trades found".format(len(trades)))
 
-        if len(result) >= limit:
+        if len(result) >= limit or from_block > w3.eth.blockNumber:
             break
 
-        page += 1
-
-        if is_last_page:
-            break
+        from_block = to_block
+        to_block += block_chunk
 
     return result
