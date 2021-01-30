@@ -70,7 +70,7 @@ class UpdateTrades:
                 pass
 
         if new_trades_len >= self.limit:
-            print("There is more trades than {}, running update method again\n".format(self.limit))
+            print("There is more than {} trades, running update method again\n".format(self.limit))
             self.update()
 
     def fetch_prices(self, from_timestamp, to_timestamp, price_type):
@@ -156,8 +156,8 @@ class UpdateTrades:
                 closest_price = price[1]
                 min_diff = diff
 
-        # Raise error if closest price timestamp is more 12 hours
-        if min_diff >= 12 * 60 * 60:
+        # Raise error if closest price timestamp is more 24 hours
+        if min_diff >= 24 * 60 * 60:
             raise ValidationError("Prices are not acceptable for timestamp: {}, min-diff: {}".format(
                 timestamp,
                 min_diff
