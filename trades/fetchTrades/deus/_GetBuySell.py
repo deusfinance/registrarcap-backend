@@ -1,7 +1,5 @@
 from web3 import Web3
 from datetime import datetime
-from requests import get
-import json
 import pytz
 
 w3 = Web3(Web3.WebsocketProvider('wss://mainnet.infura.io/ws/v3/fe345b94534845028bcd5978e0172508'))
@@ -61,11 +59,16 @@ def export_old_tr_data(old_trs):
             info['value'] = info['etherAmount'] / info['deusAmount']
             info['event'] = 'buy'
         elif str(inputData[0]) == sell:
-            tr_rcpt = w3.eth.getTransactionReceipt(log['transactionHash'])
-            info['etherAmount'] = int(tr_rcpt['logs'][0]['data'], 16) / 10 ** 18
-            info['deusAmount'] = int(inputData[1]['tokenAmount']) / 10 ** 18
-            info['value'] = info['etherAmount'] / info['deusAmount']
-            info['event'] = 'sell'
+            try:
+                tr_rcpt = w3.eth.getTransactionReceipt(log['transactionHash'])
+                info['etherAmount'] = int(tr_rcpt['logs'][0]['data'], 16) / 10 ** 18
+                info['deusAmount'] = int(inputData[1]['tokenAmount']) / 10 ** 18
+                info['value'] = info['etherAmount'] / info['deusAmount']
+                info['event'] = 'sell'
+            except:
+                continue
+                pass
+                # print(log['transactionHash'].hex())
         else:
             continue
         timeStamp = w3.eth.getBlock(int(tr['blockNumber']))['timestamp']
@@ -124,8 +127,8 @@ def get_history(fromBlock, toBlock, limit):
 
 
 if __name__ == '__main__':
-    fromBlock = 11584730
-    toBlock = 11585730
+    fromBlock = 11493518
+    toBlock = 11503518
     limit = 100
 
     # fromBlock = 11584723
