@@ -3,7 +3,7 @@ import datetime
 from trades.fetchTrades.deus._GetBuySell import get_history, w3
 
 
-def get_deus_trades(from_block, limit, block_chunk=1000):
+def get_deus_trades(from_block, limit, block_chunk=10001):
     result = []
     to_block = from_block + block_chunk
     while True:
