@@ -1,15 +1,20 @@
 import datetime
 
-from trades.fetchTrades.deus._GetBuySell import get_history, w3
+from backend.local_settings import INFURA_KEYS
+from trades.fetchTrades.deus._deus_trades import DeusTrades
 
 
-def get_deus_trades(from_block, limit, block_chunk=10001):
+def get_deus_trades(from_block, limit, block_chunk=10000):
+
+    infura_key = INFURA_KEYS[0]
+    deus_trades = DeusTrades(infura_key)
+
     result = []
     to_block = from_block + block_chunk
     while True:
         print("- Get deus trades from block {} to block {}... ".format(from_block, to_block), end=" ")
         try:
-            trades = get_history(from_block, to_block, limit)
+            trades = deus_trades.get_history(from_block, to_block, limit)
         except ValueError as e:
             if e.args[0]['code'] == -32005:
                 print("Rate limit")
@@ -37,7 +42,7 @@ def get_deus_trades(from_block, limit, block_chunk=10001):
 
         print("{} trades found".format(len(trades)))
 
-        if from_block > w3.eth.blockNumber:
+        if from_block > deus_trades.w3.eth.blockNumber:
             print(" - - End of eth blocks")
             break
 
