@@ -23,6 +23,7 @@ class Trade(models.Model):
     usd_price = models.DecimalField(max_digits=38, decimal_places=18)
     btc_price = models.DecimalField(max_digits=38, decimal_places=18)
     deus_price = models.DecimalField(max_digits=38, decimal_places=18)
+    dea_price = models.DecimalField(max_digits=38, decimal_places=18)
 
     other = JSONField(default=dict)
 

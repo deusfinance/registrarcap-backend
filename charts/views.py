@@ -101,9 +101,9 @@ class SearchSymbolView(APIView):
         )[:limit]
 
         result = []
-        target_currencys = ['deus', 'eth', 'usd', 'btc']
+        target_currencies = ['deus', 'eth', 'usd', 'btc', 'dea']
         for currency in qs.all():
-            for target_currency in target_currencys:
+            for target_currency in target_currencies:
                 result.append({
                     'symbol': "{}/{}".format(currency.name.upper(), target_currency.upper()),
                     'ticker': "{}/{}".format(currency.symbol, target_currency.lower()),

@@ -11,7 +11,8 @@ class UpdateTrades:
     prices = {
         'eth_to_usd': [],  # fetch from coingecho
         'eth_to_btc': [],  # fetch from coingecho
-        'deus_to_eth': []  # fetch from DB
+        'deus_to_eth': [],  # fetch from DB
+        'deus_to_dea': []  # fetch Dr-Collector
     }
 
     def __init__(self, currency: Currency, get_trades):
@@ -117,6 +118,11 @@ class UpdateTrades:
                 print("Coingecho limit reached, sleep for 60 seconds.")
                 sleep(60)
 
+        # Deus Dea Prices
+        url = "https://dr-collector-api.herokuapp.com/v1/transactions?poolContract=0x92adab6d8dc13dbd9052b291cfc1d07888299d65&from={}&to={}"
+        dea_deus_swaps = requests.get(url.format(from_timestamp, to_timestamp)).json()
+        self.prices['deus_to_dea'] = [(s['timestamp'], 1 / s['price']) for s in dea_deus_swaps]
+
     def get_prices(self, price, price_type, amount, timestamp):
         if price_type == 'eth':
             eth_price = price
@@ -135,12 +141,14 @@ class UpdateTrades:
 
         btc_price = self.get_closest_price(timestamp, self.prices['eth_to_btc']) * eth_price
         usd_price = self.get_closest_price(timestamp, self.prices['eth_to_usd']) * eth_price
+        dea_price = self.get_closest_price(timestamp, self.prices['deus_to_dea']) * deus_price
 
         return {
             'deus_price': deus_price,
             'eth_price': eth_price,
             'btc_price': btc_price,
-            'usd_price': usd_price
+            'usd_price': usd_price,
+            'dea_price': dea_price,
         }
 
     @staticmethod
