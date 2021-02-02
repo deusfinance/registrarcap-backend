@@ -120,7 +120,7 @@ class UpdateTrades:
 
         # Deus Dea Prices
         url = "https://dr-collector-api.herokuapp.com/v1/transactions?poolContract=0x92adab6d8dc13dbd9052b291cfc1d07888299d65&from={}&to={}"
-        dea_deus_swaps = requests.get(url.format(from_timestamp, to_timestamp)).json()
+        dea_deus_swaps = requests.get(url.format(from_timestamp - 24 * 60 * 60, to_timestamp)).json()
         self.prices['deus_to_dea'] = [(s['timestamp'], 1 / s['price']) for s in dea_deus_swaps]
 
     def get_prices(self, price, price_type, amount, timestamp):
