@@ -128,7 +128,7 @@ class UpdateTrades:
             eth_price = price
 
             if self.currency.symbol == 'deus':
-                deus_price = amount
+                deus_price = 1
             else:
                 eth_to_deus = list(map(lambda x: (x[0], 1 / x[1]), self.prices['deus_to_eth']))
                 deus_price = self.get_closest_price(timestamp, eth_to_deus)
