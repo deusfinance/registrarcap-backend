@@ -169,9 +169,10 @@ class UpdateTrades:
 
         # Raise error if closest price timestamp is more 24 hours
         if min_diff >= 24 * 60 * 60:
-            raise ValidationError("Prices are not acceptable for timestamp: {}, min-diff: {}".format(
+            print("Prices are not acceptable for timestamp: {}, min-diff: {}".format(
                 timestamp,
                 min_diff
             ))
+            closest_price = 0
 
         return closest_price
