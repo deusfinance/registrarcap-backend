@@ -104,6 +104,8 @@ class SearchSymbolView(APIView):
         target_currencies = ['deus', 'eth', 'usd', 'btc', 'dea']
         for currency in qs.all():
             for target_currency in target_currencies:
+                if currency.symbol == target_currency:
+                    continue
                 result.append({
                     'symbol': "{}/{}".format(currency.name.upper(), target_currency.upper()),
                     'ticker': "{}/{}".format(currency.symbol, target_currency.lower()),
@@ -170,7 +172,11 @@ def get_candlesticks(currency: Currency, interval: int = 1, from_timestamp=None,
 
     interval = int(interval) * 60
 
-    qs = Trade.objects.filter(currency=currency)
+    filters = {
+        'currency': currency,
+        "{}_price__gt".format(target_currency): 0
+    }
+    qs = Trade.objects.filter(**filters)
 
     if from_timestamp:
         try:
