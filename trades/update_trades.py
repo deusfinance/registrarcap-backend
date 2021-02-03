@@ -135,13 +135,17 @@ class UpdateTrades:
 
         elif price_type == 'deus':
             deus_price = price
-            eth_price = self.get_closest_price(timestamp, self.prices['deus_to_eth'])
+            eth_price = self.get_closest_price(timestamp, self.prices['deus_to_eth']) * deus_price
         else:
             raise ValidationError("price type {} is not supported".format(price_type))
 
+        if self.currency.symbol == 'dea':
+            dea_price = 1
+        else:
+            dea_price = self.get_closest_price(timestamp, self.prices['deus_to_dea']) * deus_price
+
         btc_price = self.get_closest_price(timestamp, self.prices['eth_to_btc']) * eth_price
         usd_price = self.get_closest_price(timestamp, self.prices['eth_to_usd']) * eth_price
-        dea_price = self.get_closest_price(timestamp, self.prices['deus_to_dea']) * deus_price
 
         return {
             'deus_price': deus_price,
