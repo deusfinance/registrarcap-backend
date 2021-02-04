@@ -31,7 +31,12 @@ class Trade(models.Model):
         ordering = ('timestamp', 'block')
 
     def __str__(self):
-        return "{}, {}, {} ({})".format(self.currency.symbol, self.amount, self.eth_price, self.id)
+        return "{}, {}: Amount: {}, Eth Price:{} ({})".format(
+            self.currency.symbol,
+            self.timestamp,
+            round(self.amount, 2),
+            round(self.eth_price, 2),
+            self.id)
 
 
 class Candlestick(models.Model):
