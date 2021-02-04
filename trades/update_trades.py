@@ -113,10 +113,10 @@ class UpdateTrades:
             timestamp = to
             i += 2
 
-            # coingecho 100 req/min
-            if i >= 100:
-                print("Coingecho limit reached, sleep for 60 seconds.")
-                sleep(60)
+            # coingecho 10 req/sec
+            if i >= 10:
+                print("Coingecho limit reached, sleep for 10 seconds.")
+                sleep(10)
 
         # Deus Dea Prices
         url = "https://dr-collector-api.herokuapp.com/v1/transactions?poolContract=0x92adab6d8dc13dbd9052b291cfc1d07888299d65&from={}&to={}"
