@@ -1,3 +1,4 @@
+import logging
 from time import sleep
 
 import requests
@@ -18,7 +19,9 @@ class UpdateTrades:
     def __init__(self, currency: Currency, get_trades):
         self.get_trades = get_trades
         self.currency = currency
-        self.limit = 100
+        self.limit = 2
+
+        self.logger = logging.getLogger('update_trades')
 
     def update(self):
         try:
@@ -83,7 +86,10 @@ class UpdateTrades:
 
         if price_type == 'deus':
             print("Generating deus prices")
-            qs = Trade.objects.filter(currency__symbol='DEUS', timestamp__range=(from_timestamp, to_timestamp))
+            qs = Trade.objects.filter(
+                currency__symbol='deus',
+                timestamp__range=(from_timestamp - 248 * 60 * 60, to_timestamp)
+            )
             timestamps = qs.values_list('timestamp', flat=True)
             eth_prices = qs.values_list('eth_price', flat=True)
             self.prices['deus_to_eth'] = [[timestamps[i], eth_prices[i]] for i in range(len(timestamps))]
@@ -103,12 +109,6 @@ class UpdateTrades:
 
             self.prices['eth_to_usd'] += eth_to_usd
             self.prices['eth_to_btc'] += eth_to_btc
-
-            # temporary
-            deus_to_eth_url = 'https://api.coingecko.com/api/v3/coins/deus-finance/market_chart/range?vs_currency={}&from={}&to={}'
-            deus_to_eth = requests.get(deus_to_eth_url.format('eth', timestamp, to)).json()['prices']
-            deus_to_eth = list(map(lambda p: (p[0] // 1000, p[1]), deus_to_eth))
-            self.prices['deus_to_eth'] += deus_to_eth
 
             timestamp = to
             i += 2
@@ -173,10 +173,9 @@ class UpdateTrades:
 
         # Raise error if closest price timestamp is more 24 hours
         if min_diff >= 24 * 60 * 60:
-            print("Prices are not acceptable for timestamp: {}, min-diff: {}".format(
+            raise ValidationError("Prices are not acceptable for timestamp: {}, min-diff: {}".format(
                 timestamp,
                 min_diff
             ))
-            closest_price = 0
 
         return closest_price

@@ -5,3 +5,6 @@ archived_transactions/0x*
 db.sqlite3
 .idea
 backend/local_settings.py
+bot.session
+bot.session-journal
+update_trades.log

@@ -113,3 +113,31 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 CORS_ALLOW_ALL_ORIGINS = True
 
 AUTH_USER_MODEL = 'users.User'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+        },
+        'update_trades': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': '{}/update_trades.log'.format(BASE_DIR),
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'update_trades': {
+            'handlers': ['update_trades'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
