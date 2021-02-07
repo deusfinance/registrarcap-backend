@@ -1,4 +1,5 @@
 import logging
+from decimal import Decimal
 from time import sleep
 
 import requests
@@ -97,9 +98,9 @@ class UpdateTrades:
         print("Fetching prices from Coingecko")
         url = 'https://api.coingecko.com/api/v3/coins/ethereum/market_chart/range?vs_currency={}&from={}&to={}'
         i = 0
-        timestamp = from_timestamp
+        timestamp = from_timestamp - 12 * 60 * 60
         while timestamp <= to_timestamp:
-            to = timestamp + 24 * 60 * 60 - 1  # add one day (coingecho limit)
+            to = timestamp + 24 * 60 * 60 - 1
 
             eth_to_usd = requests.get(url.format('usd', timestamp, to)).json()['prices']
             eth_to_btc = requests.get(url.format('btc', timestamp, to)).json()['prices']
@@ -125,7 +126,7 @@ class UpdateTrades:
 
     def get_prices(self, price, price_type, amount, timestamp):
         if price_type == 'eth':
-            eth_price = price
+            eth_price = Decimal(price)
 
             if self.currency.symbol == 'deus':
                 deus_price = 1
@@ -135,7 +136,7 @@ class UpdateTrades:
 
         elif price_type == 'deus':
             deus_price = price
-            eth_price = self.get_closest_price(timestamp, self.prices['deus_to_eth']) * deus_price
+            eth_price = self.get_closest_price(timestamp, self.prices['deus_to_eth']) * Decimal(deus_price)
         else:
             raise ValidationError("price type {} is not supported".format(price_type))
 
@@ -178,4 +179,4 @@ class UpdateTrades:
                 min_diff
             ))
 
-        return closest_price
+        return Decimal(closest_price)
