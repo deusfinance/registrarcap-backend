@@ -1,3 +1,4 @@
+import requests
 from django.core.management.base import BaseCommand, CommandParser
 import json
 from pyrogram import Client
@@ -6,6 +7,24 @@ from requests import Session, Timeout, TooManyRedirects
 
 from backend.local_settings import TELEGRAM_APP_ID, TELEGRAM_API_HASH, TELEGRAM_BOT_TOKEN, COINMARKETCAP_API_KEY
 from trades.models import Currency
+
+
+def get_uniswap_price():
+    epApiKey = 'freekey'
+    interact_address = "0x83973dcaa04A6786ecC0628cc494a089c1AEe947"
+    request_url = "https://api.ethplorer.io/getAddressInfo/" + str(interact_address) + "?apiKey=" + epApiKey
+    res = requests.get(request_url).json()
+    balance_a = float(res["tokens"][0]["balance"]) * (
+            1 / 10 ** float(res["tokens"][0]["tokenInfo"]["decimals"]))
+    balance_b = float(res["tokens"][1]["balance"]) * (
+            1 / 10 ** float(res["tokens"][1]["tokenInfo"]["decimals"]))
+    return (balance_a / balance_b), (balance_b / balance_a)
+
+
+def get_eth_pice():
+    request_url = "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
+    answere = requests.get(request_url).json()
+    return answere["ethereum"]["usd"]
 
 
 def get_price(symbol, target):
@@ -88,6 +107,37 @@ class Command(BaseCommand):
                                 "\n\n<a href='https://app.uniswap.org/#/swap?outputCurrency=0x3b62F3820e0B035cc4aD602dECe6d796BC325325'>UNISWAP</a>"
                         )
                     elif currency.symbol == 'dea':
+                        if pair == 'deausdc':
+                            dea_per_usdc, usdc_per_dea = get_uniswap_price()
+                            price_eth = get_eth_pice()
+                            eth_per_dea = "%.4f" % (float(usdc_per_dea) / float(price_eth))
+                            usdc_per_dea = "%.2f" % float(usdc_per_dea)
+
+                            message = (
+                                    "\n📜<a href='https://etherscan.io/token/0x80ab141f324c3d6f2b18b030f1c4e95d4d658778'>DEA Contract</a>📜"
+                                    "\nKeep in mind this is the "
+                                    "<a href='https://etherscan.io/token/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'>USDC</a>"
+                                    " price (not $)."
+                                    "\nThis price is from the "
+                                    "<a href='https://etherscan.io/token/0x80ab141f324c3d6f2b18b030f1c4e95d4d658778'>DEA</a>"
+                                    " / "
+                                    "<a href='https://etherscan.io/token/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'>USDC</a>"
+                                    " pool."
+                                    "\n\n⬇️⬇️⬇️⬇️⬇️"
+                                    "\nActual price: {} ".format(eth_per_dea) +
+                                    "<a href='https://etherscan.io/token/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'>ETH</a>"
+                                    "\n({} ".format(usdc_per_dea) +
+                                    "<a href='https://etherscan.io/token/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'>USDC</a>)"
+                                    "\n⬆️⬆️⬆️⬆️⬆️"
+                                    "\n\n<a href='https://app.uniswap.org/#/swap?outputCurrency=0x80ab141f324c3d6f2b18b030f1c4e95d4d658778'>UNISWAP</a>"
+
+                            )
+                            app.send_message(
+                                chat_id,
+                                message,
+                                disable_web_page_preview=True
+                            )
+
                         message = (
                                 "\n📜<a href='https://etherscan.io/token/0x80ab141f324c3d6f2b18b030f1c4e95d4d658778'>DEA Contract</a>📜"
                                 "\nKeep in mind this is the $ / "
