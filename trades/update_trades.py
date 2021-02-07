@@ -19,7 +19,7 @@ class UpdateTrades:
     def __init__(self, currency: Currency, get_trades):
         self.get_trades = get_trades
         self.currency = currency
-        self.limit = 2
+        self.limit = 100
 
         self.logger = logging.getLogger('update_trades')
 
