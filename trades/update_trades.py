@@ -101,6 +101,7 @@ class UpdateTrades:
         timestamp = from_timestamp - 12 * 60 * 60
         while timestamp <= to_timestamp:
             to = timestamp + 24 * 60 * 60 - 1
+            print(" - {}/{}".format(to_timestamp, to))
 
             eth_to_usd = requests.get(url.format('usd', timestamp, to)).json()['prices']
             eth_to_btc = requests.get(url.format('btc', timestamp, to)).json()['prices']
@@ -114,10 +115,11 @@ class UpdateTrades:
             timestamp = to
             i += 2
 
-            # coingecho 10 req/sec
-            if i >= 10:
-                print("Coingecho limit reached, sleep for 10 seconds.")
-                sleep(10)
+            # coingecho 10 req/sec and 100 req/minute
+            sleep(0.2)
+            if i >= 100:
+                print("Coingecho limit reached, sleep for 40 seconds.")
+                sleep(40)
 
         # Deus Dea Prices
         url = "https://dr-collector-api.herokuapp.com/v1/transactions?poolContract=0x92adab6d8dc13dbd9052b291cfc1d07888299d65&from={}&to={}"
