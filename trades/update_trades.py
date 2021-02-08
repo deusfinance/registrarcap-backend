@@ -53,6 +53,7 @@ class UpdateTrades:
             return
 
         new_trades = list(filter(lambda t: t['timestamp'] >= from_timestamp, new_trades))
+        new_trades.sort(key=lambda t: t['timestamp'])
 
         self.fetch_prices(
             new_trades[0]['timestamp'],
@@ -85,15 +86,14 @@ class UpdateTrades:
 
         # Add Caching
 
-        if price_type == 'deus':
-            print("Generating deus prices")
-            qs = Trade.objects.filter(
-                currency__symbol='deus',
-                timestamp__range=(from_timestamp - 248 * 60 * 60, to_timestamp)
-            )
-            timestamps = qs.values_list('timestamp', flat=True)
-            eth_prices = qs.values_list('eth_price', flat=True)
-            self.prices['deus_to_eth'] = [[timestamps[i], eth_prices[i]] for i in range(len(timestamps))]
+        print("Generating deus prices")
+        qs = Trade.objects.filter(
+            currency__symbol='deus',
+            timestamp__range=(from_timestamp - 24 * 60 * 60, to_timestamp + 60)
+        )
+        timestamps = qs.values_list('timestamp', flat=True)
+        eth_prices = qs.values_list('eth_price', flat=True)
+        self.prices['deus_to_eth'] = [[timestamps[i], eth_prices[i]] for i in range(len(timestamps))]
 
         print("Fetching prices from Coingecko")
         url = 'https://api.coingecko.com/api/v3/coins/ethereum/market_chart/range?vs_currency={}&from={}&to={}'
