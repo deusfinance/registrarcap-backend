@@ -135,7 +135,7 @@ class UpdateTrades:
                 deus_price = self.get_closest_price(timestamp, eth_to_deus)
 
         elif price_type == 'deus':
-            deus_price = price
+            deus_price = Decimal(price)
             eth_price = self.get_closest_price(timestamp, self.prices['deus_to_eth']) * Decimal(deus_price)
         else:
             raise ValidationError("price type {} is not supported".format(price_type))
