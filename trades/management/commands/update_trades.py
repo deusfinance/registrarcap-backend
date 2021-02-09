@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 
+from trades.fetchTrades.bakkt.get_bakkt_trades import get_bakkt_trades
 from trades.fetchTrades.coinbase.get_cointbase_trades import get_coinbase_trades
 from trades.fetchTrades.dea.get_dea_trades import get_dea_trades
 from trades.fetchTrades.deus.get_deus_trades import get_deus_trades
@@ -21,4 +22,8 @@ class Command(BaseCommand):
 
         currency = Currency.objects.get(symbol='coinbase')
         update_trades = UpdateTrades(currency, get_coinbase_trades)
+        update_trades.update()
+
+        currency = Currency.objects.get(symbol='bakkt')
+        update_trades = UpdateTrades(currency, get_bakkt_trades)
         update_trades.update()
