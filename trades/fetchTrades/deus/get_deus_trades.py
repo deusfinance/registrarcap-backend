@@ -6,6 +6,10 @@ from trades.fetchTrades.deus._deus_trades import DeusTrades
 
 def get_deus_trades(from_block, limit, block_chunk=10000):
 
+    if block_chunk <= 100:
+        print("- - reached block chunk 100...")
+        return []
+
     infura_key = INFURA_KEYS[0]
     deus_trades = DeusTrades(infura_key)
 
