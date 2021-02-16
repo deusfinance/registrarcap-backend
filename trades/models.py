@@ -1,3 +1,5 @@
+import datetime
+
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 
@@ -33,7 +35,7 @@ class Trade(models.Model):
     def __str__(self):
         return "{}, {}: Amount: {}, Eth Price:{} ({})".format(
             self.currency.symbol,
-            self.timestamp,
+            datetime.datetime.fromtimestamp(self.timestamp).isoformat(),
             round(self.amount, 2),
             round(self.eth_price, 2),
             self.id)
