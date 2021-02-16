@@ -258,20 +258,20 @@ def get_candlesticks(currency: Currency, interval: int = 1, from_timestamp=None,
         low_price = min(low_price, price)
         trades_in_interval += 1
 
-    candlestick_timestamp = candlesticks[-1]['t']
-    price = candlesticks[-1]['c']
-    volume = candlesticks[-1]['v']
-    while candlestick_timestamp < last_candlestick_timestamp:
-        candlestick_timestamp += interval
-
-        candlesticks.append({
-            't': candlestick_timestamp,
-            'o': price,
-            'h': price,
-            'l': price,
-            'c': price,
-            'v': volume
-        })
+    # candlestick_timestamp = candlesticks[-1]['t']
+    # price = candlesticks[-1]['c']
+    # volume = candlesticks[-1]['v']
+    # while candlestick_timestamp < last_candlestick_timestamp:
+    #     candlestick_timestamp += interval
+    #
+    #     candlesticks.append({
+    #         't': candlestick_timestamp,
+    #         'o': price,
+    #         'h': price,
+    #         'l': price,
+    #         'c': price,
+    #         'v': volume
+    #     })
 
     return candlesticks
 
