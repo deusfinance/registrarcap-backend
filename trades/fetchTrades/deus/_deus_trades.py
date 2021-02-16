@@ -90,13 +90,16 @@ class DeusTrades:
             tr = self.w3.eth.getTransaction(log['transactionHash'])
             if log['topics'][2].hex() == '0x0000000000000000000000000000000000000000000000000000000000000000':
                 # sell
-                tr_rcpt = self.w3.eth.getTransactionReceipt(log['transactionHash'])
-                approval_log = [lg for lg in tr_rcpt['logs'] if
-                                lg['address'] == '0x056CbC3D1926B50b493Dc2B92d3CcB2B79f65BcA']
-                info['etherAmount'] = int(approval_log[0]['data'], 16) / 10 ** 18
-                info['deusAmount'] = int(log['data'], 16) / 10 ** 18
-                info['value'] = info['etherAmount'] / info['deusAmount']
-                info['event'] = 'sell'
+                try:
+                    tr_rcpt = self.w3.eth.getTransactionReceipt(log['transactionHash'])
+                    approval_log = [lg for lg in tr_rcpt['logs'] if
+                                    lg['address'] == '0x056CbC3D1926B50b493Dc2B92d3CcB2B79f65BcA']
+                    info['etherAmount'] = int(approval_log[0]['data'], 16) / 10 ** 18
+                    info['deusAmount'] = int(log['data'], 16) / 10 ** 18
+                    info['value'] = info['etherAmount'] / info['deusAmount']
+                    info['event'] = 'sell'
+                except:
+                    continue
 
             elif log['topics'][1].hex() == '0x0000000000000000000000000000000000000000000000000000000000000000' \
                     and tr['value'] != 0:
