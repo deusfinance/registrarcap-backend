@@ -28,3 +28,5 @@ COINMARKETCAP_API_KEY = "***"
 INFURA_KEYS = [
     '***'
 ]
+
+FINNHUB_API_KEY = "***"
