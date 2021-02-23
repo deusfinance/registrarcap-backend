@@ -8,7 +8,7 @@ class DeusCommandHandler(BaseCommandHandler):
     def handle(self, client, message):
         chat_id = message.chat.id
 
-        currency = Currency.objects.get(symbol='dea')
+        currency = Currency.objects.get(symbol='deus')
         last_trade = currency.trades.latest('timestamp')
         message = (
                 "⚡️This price is based of the last mint/burn of $DEUS⚡️"
