@@ -202,62 +202,46 @@ def get_candlesticks(currency: Currency, interval: int = 1, from_timestamp=None,
 
     candlesticks = []
 
-    open_price = getattr(trades[0], "{}_price".format(target_currency))
+    candlestick_timestamp = from_timestamp - from_timestamp % interval
 
-    candlestick_timestamp = max(trades[0].timestamp, from_timestamp)
-    candlestick_timestamp = candlestick_timestamp - candlestick_timestamp % interval
+    def get_candle_trades(trades, from_timestamp, to_timestamp):
+        return list(filter(lambda t: from_timestamp <= t.timestamp < to_timestamp, trades))
 
-    now_timestamp = int(datetime.datetime.now().timestamp())
-    last_candlestick_timestamp = now_timestamp - now_timestamp % interval
+    def get_trade_price(trade):
+        return getattr(trade, "{}_price".format(target_currency))
 
-    high_price = -math.inf
-    low_price = math.inf
-    volume = 0
+    while candlestick_timestamp < to_timestamp:
+        print(candlestick_timestamp)
 
-    trades_count = len(trades)
-    print(trades_count)
-    trades_in_interval = 0
-    for i in range(trades_count):
-        trade = trades[i]
+        candle_trades = get_candle_trades(trades, candlestick_timestamp, candlestick_timestamp + interval)
 
-        timestamp = trade.timestamp
+        if len(candle_trades):
+            open_price = get_trade_price(candle_trades[0])
+            close_price = get_trade_price(candle_trades[-1])
 
-        if candlestick_timestamp + interval < timestamp or i == trades_count - 1:
-            print(candlestick_timestamp, trades_in_interval)
+            prices = [get_trade_price(t) for t in candle_trades]
+            high_price = max(prices)
+            low_price = min(prices)
 
-            if i == 0:
-                close_price = open_price
-            else:
-                close_price = getattr(trades[i - 1], "{}_price".format(target_currency))
-
-            if high_price == -math.inf:
-                high_price = open_price
-
-            if low_price == math.inf:
-                low_price = open_price
-
-            candlesticks.append({
-                't': candlestick_timestamp,
-                'o': open_price,
-                'h': high_price,
-                'l': low_price,
-                'c': close_price,
-                'v': volume
-            })
-
-            # Next candle
-            candlestick_timestamp += interval
-            open_price = close_price
-            high_price = -math.inf
-            low_price = math.inf
-            trades_in_interval = 0
+            volume = 0
+            for trade in candle_trades:
+                volume += trade.usd_price * trade.amount
+        elif len(candlesticks):
+            open_price = close_price = high_price = low_price = candlesticks[-1]['c']
             volume = 0
         else:
-            price = getattr(trade, "{}_price".format(target_currency))
-            volume += trade.amount
-            high_price = max(high_price, price)
-            low_price = min(low_price, price)
-            trades_in_interval += 1
+            candlestick_timestamp += interval
+            continue
+
+        candlesticks.append({
+            't': candlestick_timestamp,
+            'o': open_price,
+            'h': high_price,
+            'l': low_price,
+            'c': close_price,
+            'v': volume
+        })
+        candlestick_timestamp += interval
 
     return candlesticks
 
