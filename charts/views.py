@@ -211,12 +211,15 @@ def get_candlesticks(currency: Currency, interval: int = 1, from_timestamp=None,
         return getattr(trade, "{}_price".format(target_currency))
 
     while candlestick_timestamp < to_timestamp:
-        print(candlestick_timestamp)
 
         candle_trades = get_candle_trades(trades, candlestick_timestamp, candlestick_timestamp + interval)
 
         if len(candle_trades):
-            open_price = get_trade_price(candle_trades[0])
+            if len(candlesticks):
+                open_price = candlesticks[-1]['c']
+            else:
+                open_price = get_trade_price(candle_trades[0])
+
             close_price = get_trade_price(candle_trades[-1])
 
             prices = [get_trade_price(t) for t in candle_trades]
